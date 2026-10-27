@@ -1,0 +1,954 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>อ่านผล InBody</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<style>
+/* Layout: a printout-inspired reading column; loader first, then summary, then the sheet's sections in paper order, each value drawn on its own normal-range scale. */
+:root{
+  --bg:#f3f5f4; --paper:#ffffff; --ink:#17201f; --muted:#5d6b69; --line:#d9e0de;
+  --accent:#0d6e66; --accent-soft:#dcefeb; --on-accent:#ffffff;
+  --band:#cfe6df; --track:#e7ecea;
+  --ok:#2f7d4f; --ok-bg:#e1f1e6; --warn:#a8650c; --warn-bg:#fbeed8; --high:#b23a3a; --high-bg:#f8e1df; --info:#3d5f86; --info-bg:#e2eaf4;
+  --f-display:"Bai Jamjuree",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1514; --paper:#161e1d; --ink:#e3ebe9; --muted:#97a6a3; --line:#2a3634;
+  --accent:#5cc2b5; --accent-soft:#163532; --on-accent:#0f1514; --band:#1f4540; --track:#25302e;
+  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1514; --paper:#161e1d; --ink:#e3ebe9; --muted:#97a6a3; --line:#2a3634;
+  --accent:#5cc2b5; --accent-soft:#163532; --on-accent:#0f1514; --band:#1f4540; --track:#25302e;
+  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:16px;line-height:1.65}
+.wrap{max-width:980px;margin:0 auto;padding-block:28px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(28px,5vw,40px);font-weight:700}
+h2{font-size:24px;font-weight:600}
+h3{font-size:17px;font-weight:600}
+p{margin:0}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-family:var(--f-mono)}
+.muted{color:var(--muted)}
+section{display:grid;gap:16px}
+.sec-head{display:grid;gap:4px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.sec-head p{color:var(--muted);max-width:65ch}
+
+/* loader */
+.loader{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.loader .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.btn{font:inherit;font-size:15px;font-weight:500;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:8px 14px;border-radius:8px;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn svg{width:18px;height:18px}
+textarea{width:100%;min-height:72px;font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);padding:10px;resize:vertical}
+.cam{position:relative;max-width:420px;border-radius:10px;overflow:hidden;background:#000}
+.cam video{display:block;width:100%;height:auto}
+.cam .frame{position:absolute;inset:18%;border:3px solid rgba(255,255,255,.85);border-radius:12px;pointer-events:none}
+.msg{font-size:14.5px;padding:8px 12px;border-radius:8px}
+.msg.ok{color:var(--ok);background:var(--ok-bg)}
+.msg.err{color:var(--high);background:var(--high-bg)}
+.msg.info{color:var(--info);background:var(--info-bg)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:center}
+.hero .meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--muted);font-size:14px;margin-top:8px}
+.hero .lead{margin-top:14px;max-width:62ch}
+.score{position:relative;width:150px;height:150px}
+.score svg{width:100%;height:100%}
+.score .lbl{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.score .lbl b{font-family:var(--f-display);font-size:40px;line-height:1}
+.score .lbl span{font-size:12px;color:var(--muted)}
+@media (max-width:620px){.hero{grid-template-columns:1fr}.score{justify-self:start}}
+
+/* takeaways */
+.takes{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.take{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:6px;align-content:start}
+.take p{font-size:14.5px}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:2px 10px;border-radius:999px;white-space:nowrap;justify-self:start}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-ok{color:var(--ok);background:var(--ok-bg)}
+.s-low{color:var(--warn);background:var(--warn-bg)}
+.s-high{color:var(--high);background:var(--high-bg)}
+.s-info{color:var(--info);background:var(--info-bg)}
+
+/* metric rows */
+.metrics{background:var(--paper);border:1px solid var(--line);border-radius:10px}
+.metric{border-top:1px solid var(--line)}
+.metric:first-child{border-top:0}
+.metric>button{all:unset;box-sizing:border-box;cursor:pointer;width:100%;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.4fr) 22px;gap:8px 20px;align-items:center;padding:14px 16px}
+.metric>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:10px}
+.metric>button:hover{background:color-mix(in srgb,var(--accent-soft) 45%,transparent)}
+.m-name{display:grid;gap:2px;min-width:0}
+.m-name .th{font-weight:600}
+.m-name .en{font-size:12.5px;color:var(--muted)}
+.m-val{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.m-val .v{font-family:var(--f-mono);font-size:20px;font-weight:500}
+.m-val .u{font-size:13px;color:var(--muted)}
+.m-short{font-size:14px;color:var(--muted);grid-column:1/3}
+.caret{width:22px;height:22px;color:var(--muted);transition:transform .2s}
+.metric.open .caret{transform:rotate(180deg)}
+.m-detail{padding:0 16px 18px;display:grid;gap:10px;max-width:72ch}
+.m-detail h4{margin:0;font-size:14px;color:var(--accent);font-family:var(--f-display);font-weight:600}
+.m-detail p{font-size:15px}
+@media (max-width:620px){.metric>button{grid-template-columns:minmax(0,1fr) 22px}.m-short{grid-column:1/2}.m-right{grid-column:1/2}}
+
+/* range bar */
+.rbar{display:grid;gap:4px}
+.rbar .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.track{position:relative;height:10px;border-radius:5px;background:var(--track)}
+.track .band{position:absolute;top:0;bottom:0;background:var(--band);border-radius:5px}
+.track .dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;transform:translate(-50%,-50%);border:3px solid var(--paper);box-shadow:0 0 0 1.5px currentColor;background:currentColor}
+.rbar .scale{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);font-family:var(--f-mono)}
+
+/* muscle-fat chart */
+.mf{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px 16px;display:grid;gap:16px}
+.mf-row{display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;align-items:center}
+.mf-bar{position:relative;height:22px;background:var(--track);border-radius:4px;overflow:hidden}
+.mf-bar .norm{position:absolute;top:0;bottom:0;background:var(--band)}
+.mf-bar .fill{position:absolute;left:0;top:6px;bottom:6px;border-radius:0 3px 3px 0}
+.mf-axis{position:relative;height:14px;font-size:11px;color:var(--muted);font-family:var(--f-mono)}
+.mf-axis span{position:absolute;transform:translateX(-50%)}
+@media (max-width:520px){.mf-row{grid-template-columns:1fr;gap:4px}}
+
+/* body segments */
+.seg{display:grid;grid-template-columns:240px minmax(0,1fr);gap:24px;align-items:start}
+.seg svg{width:100%;max-width:240px}
+.seg .part{stroke:var(--paper);stroke-width:3;cursor:pointer;transition:opacity .15s}
+.seg .part:hover,.seg .part.sel{opacity:.75}
+.seg .part:focus-visible{outline:none;stroke:var(--ink)}
+.seg text{fill:var(--ink);font-family:var(--f-mono);font-size:12px}
+.segtable{width:100%;border-collapse:collapse;font-size:14.5px}
+.segtable th,.segtable td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+.segtable th{font-size:12px;color:var(--muted);font-weight:500}
+.segtable td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.segtable tr.sel td{background:var(--accent-soft)}
+.tbl-wrap{overflow-x:auto;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:4px 8px}
+@media (max-width:640px){.seg{grid-template-columns:1fr}.seg svg{justify-self:center}}
+
+/* history */
+.hist{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.hcard{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:6px}
+.hcard svg{width:100%;height:auto;overflow:visible}
+.hcard .ln{fill:none;stroke:var(--accent);stroke-width:2}
+.hcard .ar{fill:var(--accent-soft)}
+.hcard .pt{fill:var(--paper);stroke:var(--accent);stroke-width:2}
+.hcard .pt.last{fill:var(--accent)}
+.hcard .gl{stroke:var(--line);stroke-width:1}
+.hcard text{fill:var(--muted);font-family:var(--f-mono);font-size:10.5px}
+.hcard text.val{fill:var(--ink);font-size:11.5px}
+.hcard p{font-size:14px}
+
+/* plan */
+.plan{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+@media (max-width:720px){.plan{grid-template-columns:1fr}}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px;align-content:start}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 16px;font-size:15px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);text-align:right}
+.seg-ctl{display:flex;gap:6px;flex-wrap:wrap}
+.seg-ctl button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:6px 12px;border-radius:8px;cursor:pointer}
+.seg-ctl button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.seg-ctl button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.big{font-family:var(--f-display);font-size:34px;font-weight:700;line-height:1.1}
+
+/* personalised advice */
+.first{background:var(--accent-soft);border-radius:10px;padding:16px 18px;display:grid;gap:8px}
+.first ol{margin:0;padding-left:22px;display:grid;gap:6px}
+.advs{display:grid;gap:14px}
+.adv{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px}
+.adv-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.adv h4{margin:0 0 4px;font-size:14px;color:var(--accent);font-family:var(--f-display);font-weight:600}
+.adv ul{margin:0;padding-left:20px;display:grid;gap:6px}
+.adv li{font-size:15px}
+.pg{font-family:var(--f-mono);font-size:11.5px;color:var(--muted);white-space:nowrap}
+.harm{background:var(--high-bg);border-radius:8px;padding:10px 12px;font-size:14.5px}
+.harm b{color:var(--high)}
+.ref{font-size:12.5px;color:var(--muted)}
+.pillars{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.pillars .adv{gap:8px;align-content:start}
+.pillars li{font-size:14px}
+.refs{font-size:13px;color:var(--muted);display:grid;gap:4px}
+.refs ul{margin:0;padding-left:18px;display:grid;gap:3px}
+
+.note{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;max-width:75ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="loader" aria-labelledby="loader-h">
+    <div style="display:grid;gap:2px">
+      <h2 id="loader-h" style="font-size:19px">โหลดผลจาก QR Code บนใบผล InBody</h2>
+      <p class="muted" style="font-size:14px">สแกนด้วยกล้อง อัปโหลดรูปที่เห็น QR ชัดๆ หรือวางลิงก์ที่ได้จากการสแกน ข้อมูลถูกอ่านในเครื่องนี้เท่านั้น ไม่ถูกส่งไปที่ใด</p>
+    </div>
+    <div class="row">
+      <button type="button" class="btn primary" id="btn-cam"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8V5a1 1 0 011-1h3M16 4h3a1 1 0 011 1v3M20 16v3a1 1 0 01-1 1h-3M8 20H5a1 1 0 01-1-1v-3"/><path d="M7 12h10"/></svg>สแกนด้วยกล้อง</button>
+      <button type="button" class="btn" id="btn-img"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/></svg>อัปโหลดรูป QR</button>
+      <input type="file" id="file-img" accept="image/*" hidden>
+      <button type="button" class="btn" id="btn-paste-toggle" aria-expanded="false" aria-controls="paste-box">วางลิงก์</button>
+      <button type="button" class="btn" id="btn-sample">ดูตัวอย่าง</button>
+    </div>
+    <div id="cam-box" hidden style="display:grid;gap:8px">
+      <div class="cam"><video id="video" playsinline muted></video><div class="frame"></div></div>
+      <div class="row"><button type="button" class="btn" id="btn-cam-stop">ปิดกล้อง</button><span class="muted" style="font-size:14px">เล็ง QR ให้อยู่ในกรอบ</span></div>
+    </div>
+    <div id="paste-box" hidden style="display:grid;gap:8px">
+      <label for="paste" class="muted" style="font-size:14px">วางลิงก์ที่ขึ้นต้นด้วย https://qrcode.inbody.com</label>
+      <textarea id="paste" spellcheck="false" placeholder="https://qrcode.inbody.com/...?IBData=770-..."></textarea>
+      <div class="row"><button type="button" class="btn primary" id="btn-paste">อ่านผล</button></div>
+    </div>
+    <canvas id="cv" hidden></canvas>
+    <div id="msg" class="msg info" role="status">กำลังแสดงผลตัวอย่าง</div>
+  </section>
+
+  <header class="hero">
+    <div>
+      <div class="eyebrow" id="eyebrow"></div>
+      <h1>อ่านผล InBody ของคุณ</h1>
+      <div class="meta" id="meta"></div>
+      <p class="lead" id="lead"></p>
+    </div>
+    <div class="score" id="score"></div>
+  </header>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ภาพรวม</div><h2>เรื่องที่ควรรู้จากผลนี้</h2></div>
+    <div class="takes" id="takes"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">เวชศาสตร์วิถีชีวิต</div><h2>คำแนะนำเฉพาะคุณ</h2>
+      <p>คำแนะนำด้านล่างเลือกจากค่าในผล InBody ของคุณ อ้างอิงคู่มือ Healthy Lifestyle ของกรมอนามัย ตัวเลขในวงเล็บ เช่น "น.21" คือเลขหน้าในคู่มือ</p></div>
+    <div class="first" id="adv-first"></div>
+    <div class="advs" id="advs"></div>
+    <h3 style="margin-top:8px">พื้นฐานที่ทุกคนควรทำ</h3>
+    <div class="pillars" id="pillars"></div>
+    <div class="refs" id="adv-refs"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ส่วนที่ 1 ของใบผล</div><h2>การวิเคราะห์องค์ประกอบร่างกาย</h2>
+      <p>ร่างกายแบ่งเป็น 4 ส่วน ได้แก่ น้ำ โปรตีน แร่ธาตุ และไขมัน สามอย่างแรกรวมกันคือ "มวลไร้ไขมัน" แถบสีเขียวอ่อนคือช่วงปกติ จุดคือค่าของคุณ แตะแต่ละหัวข้อเพื่ออ่านคำอธิบาย</p></div>
+    <div class="metrics" id="g-comp"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ส่วนที่ 2 ของใบผล</div><h2>กล้ามเนื้อและไขมัน</h2>
+      <p>InBody เทียบค่าของคุณกับค่ามาตรฐานของคนส่วนสูงเดียวกัน (100% = มาตรฐาน) รูปแบบที่ดีคือแท่งกล้ามเนื้อยาวกว่าแท่งน้ำหนัก และแท่งไขมันสั้นที่สุด</p></div>
+    <div class="mf" id="mf"></div>
+    <p id="mf-note" style="max-width:70ch"></p>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ส่วนที่ 3 ของใบผล</div><h2>ภาวะอ้วนและไขมันช่องท้อง</h2>
+      <p>BMI ดูแค่น้ำหนักเทียบส่วนสูง จึงบอกไม่ได้ว่าน้ำหนักนั้นเป็นไขมันหรือกล้ามเนื้อ ต้องดูคู่กับเปอร์เซ็นต์ไขมันเสมอ</p></div>
+    <div class="metrics" id="g-obesity"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ส่วนที่ 4 ของใบผล</div><h2>กล้ามเนื้อแยกตามส่วนของร่างกาย</h2>
+      <p id="seg-intro"></p></div>
+    <div class="seg">
+      <svg viewBox="0 0 240 330" id="bodysvg" role="img" aria-label="แผนภาพกล้ามเนื้อแยกส่วน"></svg>
+      <div style="display:grid;gap:12px;min-width:0">
+        <div class="tbl-wrap"><table class="segtable" id="segtable">
+          <thead><tr><th>ส่วน</th><th>กล้ามเนื้อ (kg)</th><th>% มาตรฐาน</th><th>ECW</th></tr></thead><tbody></tbody></table></div>
+        <p id="segnote" style="font-size:14.5px"></p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ส่วนที่ 5 ของใบผล</div><h2>ข้อมูลเพิ่มเติมและสุขภาพกล้ามเนื้อ</h2></div>
+    <div class="metrics" id="g-extra"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ประวัติการวัด</div><h2>แนวโน้มที่ผ่านมา</h2>
+      <p id="hist-intro"></p></div>
+    <div class="hist" id="hist"></div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">แนวทางควบคุมน้ำหนัก</div><h2>เป้าหมายที่เครื่องแนะนำ</h2></div>
+    <div class="plan">
+      <div class="panel" id="plan-main"></div>
+      <div class="panel" id="plan-calc">
+        <h3 id="calc-h"></h3>
+        <div class="seg-ctl" role="group" aria-label="ความเร็วในการลดไขมัน" id="pace">
+          <button type="button" id="p30" data-r="0.3" aria-pressed="false">0.3 kg/สัปดาห์</button>
+          <button type="button" id="p40" data-r="0.4" aria-pressed="true">0.4 kg/สัปดาห์</button>
+          <button type="button" id="p50" data-r="0.5" aria-pressed="false">0.5 kg/สัปดาห์</button>
+        </div>
+        <div><div class="big" id="weeks"></div><div class="muted" id="weeks-sub"></div></div>
+        <p style="font-size:14.5px" id="deficit"></p>
+        <p class="muted" style="font-size:13px">ใช้หลักคร่าวๆ ว่าไขมัน 1 kg ≈ 7,700 kcal คู่มือกรมอนามัยแนะนำให้ลดพลังงานแบบปานกลาง วันละ 300–500 kcal (น.8) ซึ่งเท่ากับลดไขมันได้ราว 0.3–0.45 kg ต่อสัปดาห์ การอดอาหารหนักเกินไปทำให้ร่างกายลดการเผาผลาญและสลายกล้ามเนื้อ</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><div class="eyebrow">ค่าเชิงเทคนิค</div><h2>มุมเฟสและค่าความต้านทาน</h2></div>
+    <div class="metrics" id="g-tech"></div>
+    <div class="tbl-wrap"><table class="segtable" id="ztable"></table></div>
+  </section>
+
+  <p class="note">หน้านี้อธิบายตัวเลขจากใบผล InBody เพื่อให้เข้าใจง่ายขึ้น ไม่ใช่การวินิจฉัยทางการแพทย์ ค่าจากเครื่องวัดแบบกระแสไฟฟ้า (BIA) เปลี่ยนได้ตามปริมาณน้ำ อาหาร และการออกกำลังกายก่อนวัด ควรวัดเวลาเดิม ก่อนอาหาร และหลังเข้าห้องน้ำทุกครั้งเพื่อเทียบผลได้แม่นขึ้น หากมีโรคประจำตัวหรือวางแผนลดน้ำหนักจริงจัง ควรปรึกษาแพทย์หรือนักโภชนาการ <button type="button" class="btn" id="btn-clear" style="margin-top:10px;font-size:13px;padding:4px 10px">ลบประวัติที่บันทึกในเครื่องนี้</button></p>
+</div>
+
+<script>
+/* ---------- InBody 770 QR payload (fixed-width) ---------- */
+// Layout mapped against a printed InBody 770 sheet; offsets are 0-based into the IBData string.
+const SAMPLE = "770-31I000000000DEMO001!!!!!!!16800400M2026102010302602490235028701540136016601080094011503900325039702300075015004030371045305110451055105500480058607800528071412560305102002044027602950320098010400315096510230256100210600890099010480885098610430382037803790381038403850660665-0115-0128+0013000000000000000000000000000000000000000000000155800950080009011240357033004033262319602962486263231803111029524092550278727310253210022522508246402161899205324202381020318532001236623320197181819550056PASS0!!!!!!!!!!!!!!000000000000000000000000000000000000000000000000000000000000000000770DM-0000!!!!!!000000000000000000000000000000000000000000000000000000000";
+
+// Demo-only values for the made-up sample (real sheets: waist, grip, kcal are not in the QR), keyed by ID|date
+const PAPER_EXTRAS = {
+  'DEMO001|202610201030': {waist:96.0, hgs:38.0, kcal:2050, bmrLo:1480, bmrHi:1760}
+};
+// Made-up earlier visits for the demo sample
+const PAPER_HISTORY = {
+  'DEMO001': [
+    {k:'202504151000', weight:80.5, smm:30.1, pbf:31.2, ecwr:0.380},
+    {k:'202509101000', weight:79.6, smm:30.3, pbf:30.6, ecwr:0.381},
+    {k:'202601201000', weight:78.8, smm:30.4, pbf:30.0, ecwr:0.381}
+  ]
+};
+
+function extractIBData(text){
+  text = (text||'').trim();
+  const m = text.match(/IBData=([^&\s]+)/i);
+  let raw = m ? m[1] : text;
+  try { raw = decodeURIComponent(raw); } catch(e) {}
+  return raw;
+}
+
+function parseIBData(s){
+  if(!/^770-/.test(s)) throw new Error('รองรับเฉพาะผลจากเครื่อง InBody 770 (ข้อมูลนี้ขึ้นต้นด้วย "' + s.slice(0,4) + '")');
+  if(s.length < 493 || s.slice(493,497)!=='PASS') throw new Error('ข้อมูลใน QR ไม่ครบหรือรูปแบบไม่ตรง ลองสแกนใหม่ให้ชัดขึ้น');
+  const n = (p,len,div=10) => { const t=s.substr(p,len).replace(' ','+'); const v=parseInt(t,10); if(isNaN(v)) throw new Error('อ่านค่าที่ตำแหน่ง '+p+' ไม่ได้'); return v/div; };
+  const tri = p => [n(p,4),n(p+4,4),n(p+8,4)];
+  const seg = p => ({kg:n(p,4,100), pa:n(p+4,4), pb:n(p+8,4)});
+  const D = {
+    id: s.substr(16,14).replace(/!+$/,''),
+    height: n(30,4), age: n(34,3,1), sex: s[38]==='F'?'F':'M',
+    dk: s.substr(39,12),
+    icw: tri(53), ecw: tri(65), protein: tri(77), mineral: [n(89,4,100),n(93,4,100),n(97,4,100)], bfm: tri(101),
+    tbw: tri(113), slm: tri(125), ffm: tri(137), weight: tri(149),
+    weightPct: n(161,4), smm: n(165,4), smmPct: n(169,4), bfmPct: n(173,5),
+    bmi: n(178,4), pbf: n(182,4),
+    seg: {ra:seg(186), la:seg(198), tr:{kg:n(210,4), pa:n(214,4), pb:n(218,4)}, rl:seg(222), ll:seg(234)},
+    ecwr: n(246,4,1000),
+    segEcw: {ra:n(250,4,1000), la:n(254,4,1000), tr:n(258,4,1000), rl:n(262,4,1000), ll:n(266,4,1000)},
+    score: n(270,3,1), target: n(273,4), wc: n(277,5), fc: n(282,5), mc: n(287,5),
+    bmr: n(337,4,1), whr: [n(341,4,100),n(345,4,100),n(349,4,100)], vfa: n(353,4),
+    bcm: tri(357), z: {}, pa: n(489,4)
+  };
+  [1,5,50,250,500,1000].forEach((f,i)=>{ D.z[f] = [0,1,2,3,4].map(j=>n(369+i*20+j*4,4)); });
+  return D;
+}
+
+/* ---------- helpers ---------- */
+const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const dkDate = k => `${+k.slice(6,8)} ${MONTHS[+k.slice(4,6)-1]} ${k.slice(0,4)}`;
+const dkShort = k => `${MONTHS[+k.slice(4,6)-1]}${k.slice(2,4)}`;
+const dkTime = k => `${k.slice(8,10)}:${k.slice(10,12)}`;
+const r1 = v => Math.round(v*10)/10;
+function fmt(v,dp){ if(v==null) return ''; if(dp!=null) return v.toFixed(dp); return Math.abs(v)>=1000 ? Math.round(v).toLocaleString('en-US') : String(r1(v)); }
+const signed = v => (v>0?'+':v<0?'−':'') + fmt(Math.abs(v),1);
+const caretSVG = '<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const STATUS = {ok:['s-ok','ปกติ'],low:['s-low','ต่ำกว่าเกณฑ์'],high:['s-high','สูงกว่าเกณฑ์'],info:['s-info','ข้อมูลประกอบ']};
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+function statusOf(m){
+  if(m.status) return m.status;
+  if(m.lo!=null && m.v<m.lo) return 'low';
+  if(m.hi!=null && m.v>m.hi) return 'high';
+  return 'ok';
+}
+function rangeComment(v,lo,hi,u,dp){
+  const d = x => fmt(x,dp) + (u?' '+u:'');
+  if(lo!=null && v<lo) return `ต่ำกว่าเกณฑ์ล่าง ${d(lo-v)}`;
+  if(hi!=null && v>hi) return `สูงกว่าเกณฑ์บน ${d(v-hi)}`;
+  if(lo!=null && hi!=null){ const p=(v-lo)/(hi-lo); return p<.33?'อยู่ในเกณฑ์ ค่อนไปทางล่างของช่วง':p>.67?'อยู่ในเกณฑ์ ค่อนไปทางบนของช่วง':'อยู่ในเกณฑ์ ตรงกลางช่วง'; }
+  return 'อยู่ในเกณฑ์';
+}
+function autoScale(m){
+  if(m.min!=null) return;
+  const lo = m.lo ?? m.hi*0.5, hi = m.hi ?? m.lo*1.5, span = hi-lo;
+  m.min = Math.min(lo-span*0.6, m.v-span*0.15); m.max = Math.max(hi+span*0.6, m.v+span*0.15);
+  if(m.min<0 && lo>=0) m.min=0;
+}
+function rangeText(m){
+  if(m.lo!=null && m.hi!=null) return `ปกติ ${fmt(m.lo,m.dp)}–${fmt(m.hi,m.dp)}`;
+  if(m.hi!=null) return `ควรต่ำกว่า ${fmt(m.hi,m.dp)}`;
+  if(m.lo!=null) return `ควรสูงกว่า ${fmt(m.lo,m.dp)}`;
+  return '';
+}
+function barHTML(m,st){
+  if(m.v==null) return '';
+  autoScale(m);
+  const pct = x => Math.max(0,Math.min(100,(x-m.min)/(m.max-m.min)*100));
+  const a = m.lo!=null ? pct(m.lo) : 0, b = m.hi!=null ? pct(m.hi) : 100;
+  const col = {ok:'var(--ok)',low:'var(--warn)',high:'var(--high)',info:'var(--info)'}[st];
+  const band = (m.lo==null && m.hi==null) ? '' : `<div class="band" style="left:${a}%;width:${b-a}%"></div>`;
+  return `<div class="rbar"><div class="track">${band}<div class="dot" style="left:${pct(m.v)}%;color:${col}"></div></div>
+    <div class="scale"><span>${fmt(m.min,m.dp)}</span><span>${rangeText(m)}</span><span>${fmt(m.max,m.dp)}</span></div></div>`;
+}
+function renderGroup(gid, list){
+  const host = $(gid);
+  host.innerHTML = list.filter(Boolean).map(m=>{
+    const st = statusOf(m), [cls,label] = STATUS[st];
+    const val = m.v==null ? '<span class="u">ดูคำอธิบาย</span>' : `<span class="v">${fmt(m.v,m.dp)}</span><span class="u">${m.u||''}</span>`;
+    const you = typeof m.you==='function' ? m.you(st) : m.you;
+    return `<div class="metric" id="m-${m.id}">
+      <button type="button" aria-expanded="false" aria-controls="d-${m.id}">
+        <div class="m-name"><span class="th">${m.th}</span><span class="en">${m.en}</span></div>
+        <div class="m-right rbar"><div class="top"><div class="m-val">${val}</div><span class="chip ${cls}">${label}</span></div>${barHTML(m,st)}</div>
+        ${caretSVG}
+        <div class="m-short">${m.short}</div>
+      </button>
+      <div class="m-detail" id="d-${m.id}" hidden>
+        <div><h4>คืออะไร</h4><p>${m.what}</p></div>
+        <div><h4>ค่าของคุณหมายความว่า</h4><p>${you}</p></div>
+      </div></div>`;
+  }).join('');
+  host.querySelectorAll('.metric>button').forEach(btn=>btn.addEventListener('click',()=>{
+    const row = btn.parentElement, d = row.querySelector('.m-detail'), open = d.hidden;
+    d.hidden = !open; row.classList.toggle('open',open); btn.setAttribute('aria-expanded',open);
+  }));
+}
+
+/* ---------- page render ---------- */
+function render(D){
+  const X = PAPER_EXTRAS[D.id+'|'+D.dk] || {};
+  const male = D.sex==='M';
+  const pbfR = male ? [10,20] : [18,28];
+  const smiCut = male ? 7.0 : 5.7, hgsCut = male ? 28 : 18, waistCut = male ? 90 : 80;
+  const hM = D.height/100, smi = (D.seg.ra.kg+D.seg.la.kg+D.seg.rl.kg+D.seg.ll.kg)/(hM*hM);
+  const stdW = 22*hM*hM;
+  const stat = (v,lo,hi) => lo!=null&&v<lo?'low':hi!=null&&v>hi?'high':'ok';
+
+  // hero
+  $('eyebrow').textContent = `InBody 770 · ผลวัดวันที่ ${dkDate(D.dk)} เวลา ${dkTime(D.dk)}`;
+  $('meta').innerHTML = [`รหัส ${D.id}`, male?'เพศชาย':'เพศหญิง', `อายุ ${D.age} ปี`, `ส่วนสูง ${fmt(D.height)} cm`, `น้ำหนัก ${fmt(D.weight[0])} kg`].map(t=>`<span>${t}</span>`).join('');
+  const wSt = stat(D.weight[0],D.weight[1],D.weight[2]), fSt = stat(D.pbf,pbfR[0],pbfR[1]);
+  const mSt = D.smmPct<90?'low':D.smmPct>110?'high':'ok';
+  const parts = [
+    {ok:'น้ำหนักอยู่ในเกณฑ์',low:'น้ำหนักต่ำกว่าเกณฑ์',high:'น้ำหนักเกินเกณฑ์'}[wSt],
+    {ok:'กล้ามเนื้ออยู่ในระดับปกติ',low:'กล้ามเนื้อน้อยกว่ามาตรฐาน',high:'กล้ามเนื้อมากกว่ามาตรฐาน'}[mSt],
+    {ok:'ไขมันอยู่ในเกณฑ์',low:'ไขมันต่ำกว่าเกณฑ์',high:`มีไขมันมากเกินไป (เกินช่วงปกติ ${fmt(D.bfm[0]-D.bfm[2])} kg)`}[fSt]
+  ];
+  let goal = fSt==='high' ? 'เป้าหมายหลักคือลดไขมันโดยรักษาหรือเพิ่มกล้ามเนื้อ ไม่ใช่แค่ลดน้ำหนัก'
+           : mSt==='low' ? 'เป้าหมายหลักคือเพิ่มกล้ามเนื้อด้วยการฝึกแรงต้าน (เวทเทรนนิ่ง)และกินโปรตีนให้พอ'
+           : 'องค์ประกอบร่างกายโดยรวมอยู่ในเกณฑ์ดี รักษาพฤติกรรมนี้ไว้';
+  $('lead').innerHTML = `สรุปสั้นๆ: <b>${parts[0]} ${parts[1]} ${fSt==='high'?'แต่':'และ'}${parts[2]}</b> ${goal} แตะที่หัวข้อด้านล่างเพื่ออ่านคำอธิบายเพิ่ม`;
+  const C = 2*Math.PI*50;
+  $('score').setAttribute('aria-label',`คะแนน InBody ${D.score} จาก 100`);
+  $('score').innerHTML = `<svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="50" fill="none" stroke="var(--track)" stroke-width="10"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-Math.min(D.score,100)/100)}" transform="rotate(-90 60 60)"/></svg>
+    <div class="lbl"><b>${D.score}</b><span>คะแนน InBody / 100</span></div>`;
+
+  // history (paper + saved scans)
+  const H = store.get('inbody-hist-'+D.id) || {};
+  (PAPER_HISTORY[D.id]||[]).forEach(e=>{ if(!H[e.k]) H[e.k]=e; });
+  H[D.dk] = {k:D.dk, weight:D.weight[0], smm:D.smm, pbf:D.pbf, ecwr:D.ecwr};
+  const saved = store.get('inbody-hist-'+D.id) || {}; saved[D.dk]=H[D.dk]; store.set('inbody-hist-'+D.id, saved);
+  const hist = Object.values(H).sort((a,b)=>a.k.localeCompare(b.k)).slice(-6);
+  const ecwUp = hist.length>=3 && hist.every((e,i)=>i===0||e.ecwr>=hist[i-1].ecwr) && hist.at(-1).ecwr>hist[0].ecwr;
+
+  // takeaways
+  const T = [];
+  T.push(fSt==='high'
+    ? ['high','ควรปรับ','ไขมันในร่างกายสูง',`มวลไขมัน ${fmt(D.bfm[0])} kg เกินช่วงปกติ (${fmt(D.bfm[1])}–${fmt(D.bfm[2])}) และเปอร์เซ็นต์ไขมัน ${fmt(D.pbf)}% สูงกว่าเกณฑ์${male?'ผู้ชาย':'ผู้หญิง'} (${pbfR[0]}–${pbfR[1]}%)`]
+    : fSt==='low' ? ['low','เฝ้าระวัง','ไขมันต่ำกว่าเกณฑ์',`เปอร์เซ็นต์ไขมัน ${fmt(D.pbf)}% ต่ำกว่า ${pbfR[0]}% ไขมันน้อยเกินไปกระทบฮอร์โมนและพลังงานสำรองได้`]
+    : ['ok','ดี','ไขมันอยู่ในเกณฑ์',`เปอร์เซ็นต์ไขมัน ${fmt(D.pbf)}% อยู่ในช่วง ${pbfR[0]}–${pbfR[1]}%`]);
+  const waistTxt = X.waist ? ` รอบเอว ${fmt(X.waist)} cm` : '';
+  T.push(D.vfa>=100 ? ['high','ควรปรับ','ไขมันช่องท้องสูง',`พื้นที่ไขมันช่องท้อง ${fmt(D.vfa)} cm² เกิน 100 สัมพันธ์กับเบาหวาน ไขมันพอกตับ และโรคหัวใจ`]
+    : D.whr[0]>D.whr[2] ? ['low','เฝ้าระวัง','รอบเอวเริ่มเกิน',`สัดส่วนเอวต่อสะโพก ${fmt(D.whr[0],2)} เกินเกณฑ์ ${fmt(D.whr[2],2)}${waistTxt} ไขมันช่องท้อง ${fmt(D.vfa)} ยังต่ำกว่า 100`]
+    : ['ok','ดี','ไขมันช่องท้องอยู่ในเกณฑ์',`พื้นที่ไขมันช่องท้อง ${fmt(D.vfa)} cm² ต่ำกว่า 100 และสัดส่วนเอวต่อสะโพก ${fmt(D.whr[0],2)} อยู่ในเกณฑ์`]);
+  const hgsTxt = X.hgs ? ` และแรงบีบมือ ${fmt(X.hgs)} kg` : '';
+  T.push(smi<smiCut ? ['low','เฝ้าระวัง','กล้ามเนื้อน้อย',`ดัชนีกล้ามเนื้อ ${fmt(smi)} ต่ำกว่าเกณฑ์ ${smiCut} ควรฝึกแรงต้าน (เวทเทรนนิ่ง)และกินโปรตีนให้พอ`]
+    : ['ok','ดี','กล้ามเนื้ออยู่ในเกณฑ์',`กล้ามเนื้อโครงร่าง ${fmt(D.smm)} kg (${fmt(D.smmPct)}% ของมาตรฐาน) ดัชนีกล้ามเนื้อ ${fmt(smi)}${hgsTxt} สูงกว่าเกณฑ์ภาวะกล้ามเนื้อน้อย`]);
+  T.push(D.ecwr>0.390 ? ['high','ควรปรึกษาแพทย์','น้ำนอกเซลล์สูง',`สัดส่วน ECW ${fmt(D.ecwr,3)} เกิน 0.390 อาจหมายถึงบวมน้ำหรือการอักเสบ`]
+    : ['ok','ปกติ','สมดุลน้ำในร่างกายปกติ',`สัดส่วน ECW ${fmt(D.ecwr,3)} อยู่ในช่วงปกติ (0.360–0.390)${ecwUp?' แต่ขยับขึ้นทีละน้อยทุกครั้งที่วัด ควรติดตามต่อ':''}`]);
+  $('takes').innerHTML = T.map(([s,l,h,p])=>`<div class="take"><span class="chip s-${s}">${l}</span><h3>${h}</h3><p>${p}</p></div>`).join('');
+
+  // section 1
+  const rc = (m) => rangeComment(m.v,m.lo,m.hi,m.u,m.dp);
+  const mk = (o) => ({...o, you: st => rc(o) + (o.say?.[st] ?? '')});
+  renderGroup('g-comp', [
+    mk({id:'tbw', th:'ปริมาณน้ำในร่างกาย', en:'Total Body Water', v:D.tbw[0], u:'L', lo:D.tbw[1], hi:D.tbw[2],
+      short:`น้ำในเซลล์ ${fmt(D.icw[0])} L + น้ำนอกเซลล์ ${fmt(D.ecw[0])} L`,
+      what:'น้ำส่วนใหญ่อยู่ในกล้ามเนื้อ คนที่มีกล้ามเนื้อมากจึงมีน้ำมาก ไขมันแทบไม่มีน้ำ',
+      say:{ok:' ร่างกายไม่ขาดน้ำและไม่บวมน้ำ', low:' มักพบเมื่อกล้ามเนื้อน้อย หรือดื่มน้ำไม่พอก่อนวัด', high:' อาจเพราะมีกล้ามเนื้อมาก หรือมีภาวะบวมน้ำ ให้ดูสัดส่วน ECW ประกอบ'}}),
+    mk({id:'protein', th:'โปรตีน', en:'Protein', v:D.protein[0], u:'kg', lo:D.protein[1], hi:D.protein[2],
+      short:'โปรตีนที่เป็นโครงสร้างของเซลล์ โดยเฉพาะกล้ามเนื้อ',
+      what:'สะท้อนภาวะโภชนาการและปริมาณกล้ามเนื้อ ถ้าต่ำมักแปลว่ากินโปรตีนไม่พอหรือกล้ามเนื้อน้อย',
+      say:{low:' ควรกินโปรตีนให้พอ (ราว 1.2–1.6 g ต่อน้ำหนักตัว 1 kg) ร่วมกับฝึกแรงต้าน (เวทเทรนนิ่ง)', high:' สะท้อนว่ามีกล้ามเนื้อมาก'}}),
+    mk({id:'mineral', th:'แร่ธาตุ', en:'Minerals', v:D.mineral[0], u:'kg', lo:D.mineral[1], hi:D.mineral[2], dp:2,
+      short:'แร่ธาตุในกระดูกและในเลือด/เนื้อเยื่อ',
+      what:'ใช้ประเมินความแข็งแรงของกระดูกคร่าวๆ ไม่ได้แทนการตรวจมวลกระดูก (DEXA)',
+      say:{low:' การออกกำลังกายแบบลงน้ำหนักและได้แคลเซียม/วิตามินดีพอช่วยได้'}}),
+    mk({id:'bfm', th:'มวลไขมันในร่างกาย', en:'Body Fat Mass', v:D.bfm[0], u:'kg', lo:D.bfm[1], hi:D.bfm[2],
+      short:'น้ำหนักของไขมันทั้งหมดในร่างกาย',
+      what:'ไขมันจำเป็นต่อร่างกาย แต่ถ้ามากเกินเพิ่มความเสี่ยงเบาหวาน ความดัน ไขมันในเลือด และโรคหัวใจ',
+      say:{high:' นี่คือประเด็นหลักของผลครั้งนี้', low:' ไขมันน้อยเกินไปอาจกระทบฮอร์โมนและภูมิคุ้มกัน'}}),
+    mk({id:'slm', th:'มวลกล้ามเนื้อ', en:'Soft Lean Mass', v:D.slm[0], u:'kg', lo:D.slm[1], hi:D.slm[2],
+      short:'น้ำ + โปรตีน (รวมกล้ามเนื้อทุกชนิดและอวัยวะภายใน)',
+      what:'ต่างจาก "กล้ามเนื้อโครงร่าง" ตรงที่รวมกล้ามเนื้อเรียบ เช่น กระเพาะ ลำไส้ หัวใจด้วย'}),
+    mk({id:'ffm', th:'มวลไร้ไขมัน', en:'Fat-Free Mass', v:D.ffm[0], u:'kg', lo:D.ffm[1], hi:D.ffm[2],
+      short:'ทุกอย่างในร่างกายที่ไม่ใช่ไขมัน (น้ำ + โปรตีน + แร่ธาตุ)',
+      what:'ยิ่งมากยิ่งเผาผลาญพลังงานได้มาก เพราะเนื้อเยื่อไร้ไขมันใช้พลังงานมากกว่าไขมัน',
+      say:{ok:` น้ำหนัก ${fmt(D.weight[0])} kg ของคุณ = มวลไร้ไขมัน ${fmt(D.ffm[0])} + ไขมัน ${fmt(D.bfm[0])}`}}),
+    mk({id:'wt', th:'น้ำหนัก', en:'Weight', v:D.weight[0], u:'kg', lo:D.weight[1], hi:D.weight[2],
+      short:`น้ำหนักตัวทั้งหมด (${fmt(D.weightPct)}% ของน้ำหนักมาตรฐาน)`,
+      what:'ช่วงปกติคิดจากส่วนสูง แต่น้ำหนักปกติไม่ได้แปลว่าองค์ประกอบร่างกายดีเสมอไป',
+      say:{ok: fSt==='high'?' แต่ส่วนที่เกินน้ำหนักมาตรฐานเป็นไขมันเกือบทั้งหมด':'', high:' ดูเปอร์เซ็นต์ไขมันประกอบว่าส่วนเกินเป็นไขมันหรือกล้ามเนื้อ'}})
+  ]);
+
+  // section 2: muscle-fat bars
+  const MF = [
+    {th:'น้ำหนัก', v:`${fmt(D.weight[0])} kg`, p:D.weightPct, lo:85, hi:115},
+    {th:'กล้ามเนื้อโครงร่าง', v:`${fmt(D.smm)} kg`, p:D.smmPct, lo:90, hi:110},
+    {th:'มวลไขมัน', v:`${fmt(D.bfm[0])} kg`, p:D.bfmPct, lo:80, hi:160}
+  ];
+  const S0=40, S1=Math.max(220, Math.ceil(Math.max(...MF.map(r=>r.p))/20)*20+20), x = p => (Math.min(p,S1)-S0)/(S1-S0)*100;
+  const col = r => r.p>r.hi?'var(--high)':r.p<r.lo?'var(--warn)':'var(--ink)';
+  $('mf').innerHTML = MF.map(r=>`
+    <div class="mf-row"><div><b>${r.th}</b><div class="muted num" style="font-size:13px">${r.v} · ${fmt(r.p)}%</div></div>
+    <div class="mf-bar"><div class="norm" style="left:${x(r.lo)}%;width:${x(r.hi)-x(r.lo)}%"></div>
+    <div class="fill" style="width:${x(r.p)}%;background:${col(r)}"></div></div></div>`).join('') +
+    `<div class="mf-row"><div></div><div class="mf-axis">${[100,160].concat([S1]).map(v=>`<span style="left:${x(v)}%;${v===S1?'transform:translateX(-100%)':''}">${v}%</span>`).join('')}<span style="left:0;transform:none">${S0}%</span></div></div>`;
+  let shape;
+  if(D.bfmPct>160 && D.smmPct<D.weightPct) shape = `แท่งไขมันยาวที่สุด (${fmt(D.bfmPct)}%) และแท่งกล้ามเนื้อสั้นกว่าแท่งน้ำหนัก แปลว่าน้ำหนักส่วนที่เกินมาตรฐานมาจากไขมันเป็นหลัก ไม่ใช่กล้ามเนื้อ`;
+  else if(D.smmPct>=D.weightPct && D.bfmPct<=160) shape = 'แท่งกล้ามเนื้อยาวกว่าแท่งน้ำหนัก และไขมันอยู่ในเกณฑ์ เป็นรูปแบบที่แข็งแรง';
+  else shape = `กล้ามเนื้อ ${fmt(D.smmPct)}% ไขมัน ${fmt(D.bfmPct)}% ของค่ามาตรฐาน`;
+  $('mf-note').innerHTML = `<b>รูปแบบของคุณ:</b> ${shape} (น้ำหนักมาตรฐานที่ส่วนสูง ${fmt(D.height)} cm ประมาณ ${fmt(stdW)} kg)`;
+
+  // section 3
+  const bmiAsia = D.bmi>=23 && D.bmi<25 ? ' ถ้าใช้เกณฑ์คนเอเชีย (≥23) ถือว่าน้ำหนักเกินเล็กน้อย' : '';
+  const pbfAfter = D.fc<0 ? (D.bfm[0]+D.fc)/D.target*100 : null;
+  renderGroup('g-obesity', [
+    mk({id:'bmi', th:'ดัชนีมวลกาย', en:'BMI', v:D.bmi, u:'kg/m²', lo:18.5, hi:25,
+      short:'น้ำหนัก (kg) ÷ ส่วนสูง (m)²',
+      what:'ใช้คัดกรองภาวะอ้วนแบบง่าย InBody ใช้ช่วงปกติ 18.5–25 สำหรับคนเอเชียมักใช้ 23 ขึ้นไปเป็นน้ำหนักเกิน',
+      say:{ok:bmiAsia + (fSt==='high'?' และเปอร์เซ็นต์ไขมันยืนยันว่าส่วนเกินคือไขมัน':'')}}),
+    mk({id:'pbf', th:'เปอร์เซ็นต์ไขมันในร่างกาย', en:'Percent Body Fat', v:D.pbf, u:'%', lo:pbfR[0], hi:pbfR[1],
+      short:`สัดส่วนไขมันต่อน้ำหนักตัว (${male?'ผู้ชาย':'ผู้หญิง'}ปกติ ${pbfR[0]}–${pbfR[1]}%)`,
+      what:'เป็นตัวชี้วัดภาวะอ้วนที่แม่นกว่า BMI คนที่ BMI ปกติแต่ไขมันสูงเรียกว่า "อ้วนซ่อนรูป"',
+      say:{high: pbfAfter ? ` ถ้าทำตามเป้าหมายของเครื่องได้ (ลดไขมัน ${fmt(-D.fc)} kg) จะเหลือราว ${fmt(pbfAfter)}%` : ''}}),
+    mk({id:'vfa', th:'พื้นที่ไขมันในช่องท้อง', en:'Visceral Fat Area', v:D.vfa, u:'cm²', lo:null, hi:100, min:0, max:Math.max(200,D.vfa+20),
+      short:'ไขมันที่ห่อหุ้มอวัยวะภายในช่องท้อง (ควรต่ำกว่า 100)',
+      what:'ไขมันชนิดนี้อันตรายกว่าไขมันใต้ผิวหนัง เพราะสัมพันธ์กับภาวะดื้ออินซูลิน ไขมันพอกตับ และโรคหัวใจ',
+      say:{ok: D.vfa>=75?' แต่ไม่ได้ห่างจาก 100 มาก ไขมันช่องท้องตอบสนองต่อการออกกำลังกายและลดน้ำตาล/แอลกอฮอล์ได้เร็ว':'', high:' ควรลดอย่างจริงจังด้วยการออกกำลังกายสม่ำเสมอ ลดน้ำตาลและแอลกอฮอล์'}}),
+    mk({id:'whr', th:'สัดส่วนเอวต่อสะโพก', en:'Waist-Hip Ratio', v:D.whr[0], u:'', lo:D.whr[1], hi:D.whr[2], dp:2,
+      short:'รอบเอว ÷ รอบสะโพก',
+      what:'บอกว่าไขมันสะสมที่หน้าท้องมากแค่ไหน ยิ่งสูงยิ่งเสี่ยงโรคเมตาบอลิก',
+      say:{high:' เป็นสัญญาณว่าไขมันเริ่มไปสะสมที่ท้อง'}}),
+    X.waist ? mk({id:'waist', th:'เส้นรอบเอว', en:'Waist Circumference (จากใบผล)', v:X.waist, u:'cm', lo:null, hi:waistCut, min:60, max:120,
+      short:`เกณฑ์${male?'ผู้ชาย':'ผู้หญิง'}เอเชียไม่ควรเกิน ${waistCut} cm`,
+      what:`วัดง่ายที่สุดและใช้ติดตามที่บ้านได้ อีกเกณฑ์ที่ใช้ในไทยคือไม่เกินส่วนสูง ÷ 2 (ของคุณ = ${fmt(D.height/2)} cm)`,
+      say:{ok: X.waist>D.height/2?` แต่เกินเกณฑ์ส่วนสูง ÷ 2 อยู่ราว ${fmt(X.waist-D.height/2)} cm`:''}}) : null
+  ]);
+
+  // section 4: segments
+  const SEG = [
+    {id:'ra', th:'แขนขวา', lo:85, hi:115}, {id:'la', th:'แขนซ้าย', lo:85, hi:115},
+    {id:'tr', th:'ลำตัว', lo:90, hi:110}, {id:'rl', th:'ขาขวา', lo:90, hi:110}, {id:'ll', th:'ขาซ้าย', lo:90, hi:110}
+  ].map(s=>({...s, kg:D.seg[s.id].kg, p:D.seg[s.id].pb, ecw:D.segEcw[s.id]}));
+  const by = Object.fromEntries(SEG.map(s=>[s.id,s]));
+  const bal = (a,b) => { const d=Math.abs(a.kg-b.kg)/Math.max(a.kg,b.kg)*100; return d<3?'สมดุล':d<6?'ขาดสมดุลเล็กน้อย':'ขาดสมดุลมาก'; };
+  const armBal = bal(by.ra,by.la), legBal = bal(by.rl,by.ll);
+  const allOk = SEG.every(s=>s.p>=s.lo && s.p<=s.hi);
+  const lowest = SEG.reduce((a,b)=>a.p<b.p?a:b);
+  $('seg-intro').textContent = `% คือกล้ามเนื้อของส่วนนั้นเทียบกับค่ามาตรฐาน (แขน 85–115%, ลำตัวและขา 90–110%) ${allOk?'ทุกส่วนอยู่ในเกณฑ์':'บางส่วนอยู่นอกเกณฑ์'} ส่วนที่น้อยที่สุดคือ${lowest.th} (${fmt(lowest.p)}%) แขนซ้าย-ขวา${armBal} ขาซ้าย-ขวา${legBal} แตะที่รูปหรือแถวในตารางเพื่อดูแต่ละส่วน`;
+  const segNote = s => {
+    const pair = {ra:'la',la:'ra',rl:'ll',ll:'rl'}[s.id], st = s.p<s.lo?'ต่ำกว่าเกณฑ์':s.p>s.hi?'สูงกว่าเกณฑ์':'อยู่ในเกณฑ์';
+    let t = `${s.th} มีกล้ามเนื้อ ${fmt(s.kg, s.id==='tr'?1:2)} kg หรือ ${fmt(s.p)}% ของมาตรฐาน ${st}`;
+    if(pair){ const o=by[pair], d=s.kg-o.kg; t += ` ${d>=0?'มากกว่า':'น้อยกว่า'}${o.th} ${fmt(Math.abs(d),2)} kg`; }
+    t += ` ECW ของส่วนนี้ ${fmt(s.ecw,3)} ${s.ecw>0.390?'สูงกว่าปกติ':'อยู่ในเกณฑ์'}`;
+    const tip = {ra:'ท่าดันพื้น ดึงข้อ ยกดัมเบล ช่วยเพิ่มกล้ามเนื้อแขน',la:'ท่าดันพื้น ดึงข้อ ยกดัมเบล ช่วยเพิ่มกล้ามเนื้อแขน',tr:'กล้ามเนื้อลำตัวช่วยเรื่องท่าทางและลดปวดหลัง เช่น Plank, Deadlift',rl:'ท่าข้างเดียว เช่น Lunge หรือ Step-up ช่วยให้ขาสองข้างสมดุลกัน',ll:'ท่าข้างเดียว เช่น Lunge หรือ Step-up ช่วยให้ขาสองข้างสมดุลกัน'}[s.id];
+    return t + ' ' + tip;
+  };
+  const SHAPES = {
+    ra:'<rect x="38" y="78" width="30" height="120" rx="14"', la:'<rect x="172" y="78" width="30" height="120" rx="14"',
+    tr:'<rect x="74" y="72" width="92" height="120" rx="18"', rl:'<rect x="76" y="196" width="40" height="126" rx="16"',
+    ll:'<rect x="124" y="196" width="40" height="126" rx="16"'
+  };
+  const segColor = s => s.p<s.lo ? 'var(--warn)' : s.p>s.hi ? 'var(--info)' : `color-mix(in srgb, var(--accent) ${Math.round(45+Math.max(0,Math.min(1,(s.p-s.lo)/(s.hi-s.lo)))*55)}%, var(--track))`;
+  const lab = {ra:[53,140],la:[187,140],tr:[120,136],rl:[96,262],ll:[144,262]};
+  // person faces the viewer, so their right side is on the left of the drawing
+  let h = '<circle cx="120" cy="38" r="26" fill="var(--track)"/>';
+  SEG.forEach(s=>{ h += `${SHAPES[s.id]} class="part" data-id="${s.id}" fill="${segColor(s)}" tabindex="0" role="button" aria-label="${s.th} ${fmt(s.p)}%"/>`; });
+  SEG.forEach(s=>{ const [cx,cy]=lab[s.id]; h += `<text x="${cx}" y="${cy}" text-anchor="middle" pointer-events="none" style="fill:var(--paper);font-weight:500">${Math.round(s.p)}</text>`; });
+  h += '<text x="53" y="214" text-anchor="middle">ขวา</text><text x="187" y="214" text-anchor="middle">ซ้าย</text>';
+  const svg = $('bodysvg'); svg.innerHTML = h;
+  const tb = document.querySelector('#segtable tbody');
+  tb.innerHTML = SEG.map(s=>`<tr data-id="${s.id}" style="cursor:pointer"><td>${s.th}</td><td class="n">${fmt(s.kg, s.id==='tr'?1:2)}</td><td class="n">${fmt(s.p)}%</td><td class="n">${fmt(s.ecw,3)}</td></tr>`).join('');
+  const select = id => {
+    svg.querySelectorAll('.part').forEach(p=>p.classList.toggle('sel',p.dataset.id===id));
+    tb.querySelectorAll('tr').forEach(r=>r.classList.toggle('sel',r.dataset.id===id));
+    $('segnote').textContent = segNote(by[id]);
+  };
+  svg.querySelectorAll('.part').forEach(p=>{
+    p.addEventListener('click',()=>select(p.dataset.id));
+    p.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();select(p.dataset.id);} });
+  });
+  tb.querySelectorAll('tr').forEach(r=>r.addEventListener('click',()=>select(r.dataset.id)));
+  select(lowest.id);
+
+  // section 5
+  renderGroup('g-extra', [
+    mk({id:'bmr', th:'อัตราการเผาผลาญพลังงานพื้นฐาน', en:'BMR', v:D.bmr, u:'kcal', lo:X.bmrLo??null, hi:X.bmrHi??null,
+      status: X.bmrLo ? null : 'info', min: X.bmrLo?null:D.bmr-400, max: X.bmrLo?null:D.bmr+400, dp:0,
+      short:'พลังงานที่ร่างกายใช้ขณะพักเฉยๆ ทั้งวัน',
+      what:'คำนวณจากมวลไร้ไขมัน ยิ่งกล้ามเนื้อมาก BMR ยิ่งสูง ไม่ใช่ปริมาณที่ควรกิน (ควรกินมากกว่านี้)',
+      say:{low:' เพราะสัดส่วนกล้ามเนื้อต่อน้ำหนักยังไม่มากพอ การเพิ่มกล้ามเนื้อจะช่วยดึงค่านี้ขึ้น', info:' ใช้เป็นฐานในการคำนวณพลังงานที่ควรกินในแต่ละวัน'}}),
+    mk({id:'smi', th:'ดัชนีกล้ามเนื้อโครงร่าง', en:'SMI (Skeletal Muscle Index)', v:r1(smi), u:'kg/m²', lo:smiCut, hi:null, min:smiCut-2.5, max:smiCut+3,
+      short:`กล้ามเนื้อแขน+ขา ÷ ส่วนสูง² (เกณฑ์ภาวะกล้ามเนื้อน้อย${male?'ผู้ชาย':'ผู้หญิง'}: ต่ำกว่า ${smiCut})`,
+      what:'ใช้คัดกรองภาวะมวลกล้ามเนื้อน้อย (Sarcopenia) ตามเกณฑ์ของเอเชีย (AWGS) คำนวณจากกล้ามเนื้อแขนขาในข้อมูล QR',
+      say:{ok:' ไม่มีภาวะกล้ามเนื้อน้อย', low:' ควรฝึกแรงต้าน (เวทเทรนนิ่ง)สม่ำเสมอและปรึกษาผู้เชี่ยวชาญ'}}),
+    X.hgs ? mk({id:'hgs', th:'แรงบีบมือ', en:'Hand Grip Strength (จากใบผล)', v:X.hgs, u:'kg', lo:hgsCut, hi:null, min:hgsCut-15, max:hgsCut+30,
+      short:`ความแข็งแรงของกล้ามเนื้อ (เกณฑ์${male?'ผู้ชาย':'ผู้หญิง'}: ไม่ควรต่ำกว่า ${hgsCut} kg)`,
+      what:'สะท้อนความแข็งแรงของกล้ามเนื้อทั้งตัว และสัมพันธ์กับสุขภาพโดยรวมเมื่ออายุมากขึ้น',
+      say:{ok:' กล้ามเนื้อมีคุณภาพดี'}}) : null,
+    mk({id:'ecwr', th:'สัดส่วนน้ำนอกเซลล์', en:'ECW Ratio', v:D.ecwr, u:'', lo:0.360, hi:0.390, min:0.32, max:0.45, dp:3,
+      short:'น้ำนอกเซลล์ ÷ น้ำทั้งหมด (ปกติ 0.360–0.390)',
+      what:'ถ้าสูงกว่า 0.390 อาจหมายถึงบวมน้ำ อักเสบ หรือโภชนาการไม่ดี ปกติจะเพิ่มขึ้นเล็กน้อยตามอายุ',
+      say:{ok: ecwUp?` แต่ขยับขึ้นจาก ${fmt(hist[0].ecwr,3)} → ${fmt(D.ecwr,3)} การนอนพอ ลดเค็ม และเพิ่มกล้ามเนื้อช่วยให้ค่านี้ดีขึ้น`:'', high:' ควรปรึกษาแพทย์ โดยเฉพาะถ้ามีอาการบวม'}}),
+    mk({id:'bcm', th:'มวลเซลล์ร่างกาย', en:'Body Cell Mass', v:D.bcm[0], u:'kg', lo:D.bcm[1], hi:D.bcm[2],
+      short:'น้ำในเซลล์ + โปรตีน (ส่วนของร่างกายที่ "ทำงาน")',
+      what:'สะท้อนปริมาณเซลล์ที่ใช้พลังงานจริง ใช้ประเมินภาวะโภชนาการ ค่านี้ไม่ได้พิมพ์บนใบผล แต่อยู่ในข้อมูล QR',
+      say:{low:' มักสัมพันธ์กับกล้ามเนื้อน้อยหรือโภชนาการไม่เพียงพอ'}})
+  ]);
+
+  // history
+  const HS = [
+    {th:'น้ำหนัก', u:'kg', key:'weight', dp:1}, {th:'กล้ามเนื้อโครงร่าง', u:'kg', key:'smm', dp:1},
+    {th:'เปอร์เซ็นต์ไขมัน', u:'%', key:'pbf', dp:1}, {th:'สัดส่วน ECW', u:'', key:'ecwr', dp:3}
+  ];
+  if(hist.length<2){
+    $('hist-intro').textContent = 'มีผลวัดเพียงครั้งเดียว เมื่อโหลดผลครั้งถัดไปของรหัสเดียวกันในเครื่องนี้ จะเห็นแนวโน้มที่นี่';
+    $('hist').innerHTML = '';
+  } else {
+    $('hist-intro').textContent = `${hist.length} ครั้ง ตั้งแต่ ${dkDate(hist[0].k)} ถึง ${dkDate(hist.at(-1).k)} (รวมประวัติจากใบผลและผลที่โหลดในเครื่องนี้)`;
+    const W=240,Hh=120,L=8,R=8,Tp=22,B=24;
+    $('hist').innerHTML = HS.map(s=>{
+      const d = hist.map(e=>e[s.key]), mn=Math.min(...d), mx=Math.max(...d), pad=(mx-mn||Math.abs(mx)*0.02||1)*0.35, lo=mn-pad, hi=mx+pad;
+      const X1=i=>L+i*(W-L-R)/(d.length-1), Y=v=>Tp+(1-(v-lo)/(hi-lo))*(Hh-Tp-B);
+      const pts=d.map((v,i)=>`${X1(i)},${Y(v)}`);
+      const area=`M${X1(0)},${Hh-B} L${pts.join(' L')} L${X1(d.length-1)},${Hh-B} Z`;
+      const anc = i => i===0?'start':i===d.length-1?'end':'middle';
+      const grid=d.map((_,i)=>`<line class="gl" x1="${X1(i)}" x2="${X1(i)}" y1="${Tp-6}" y2="${Hh-B}"/>`).join('');
+      const dots=d.map((v,i)=>`<circle class="pt${i===d.length-1?' last':''}" cx="${X1(i)}" cy="${Y(v)}" r="4"/><text class="val" x="${X1(i)}" y="${Y(v)-9}" text-anchor="${anc(i)}">${v.toFixed(s.dp)}</text>`).join('');
+      const xl=hist.map((e,i)=>`<text x="${X1(i)}" y="${Hh-6}" text-anchor="${anc(i)}">${dkShort(e.k)}</text>`).join('');
+      const diff = d.at(-1)-d[0];
+      const note = Math.abs(diff) < (s.dp===3?0.001:0.1) ? 'คงที่ตั้งแต่ครั้งแรก' : `${diff>0?'เพิ่มขึ้น':'ลดลง'} ${Math.abs(diff).toFixed(s.dp)} ${s.u} จากครั้งแรก · ล่าสุด${d.at(-1)>d.at(-2)?'เพิ่มขึ้น':d.at(-1)<d.at(-2)?'ลดลง':'เท่าเดิม'}จากครั้งก่อน`;
+      return `<div class="hcard"><div style="display:flex;justify-content:space-between;gap:8px"><h3>${s.th}</h3><span class="muted num" style="font-size:13px">${s.u}</span></div>
+        <svg viewBox="0 0 ${W} ${Hh}" role="img" aria-label="${s.th}: ${d.join(', ')}">${grid}<path class="ar" d="${area}"/><polyline class="ln" points="${pts.join(' ')}"/>${dots}${xl}</svg>
+        <p class="muted">${note}</p></div>`;
+    }).join('');
+  }
+
+  // plan
+  const kv = [['น้ำหนักเป้าหมาย',`${fmt(D.target)} kg`],['ควบคุมน้ำหนักรวม',`${signed(D.wc)} kg`],
+    ['ควบคุมไขมัน',`<span style="color:${D.fc<0?'var(--high)':'inherit'}">${signed(D.fc)} kg</span>`],
+    ['ควบคุมกล้ามเนื้อ',`<span style="color:${D.mc>0?'var(--ok)':'inherit'}">${signed(D.mc)} kg</span>`],
+    ['อัตราเผาผลาญพื้นฐาน (BMR)',`${fmt(D.bmr)} kcal`]];
+  if(X.kcal) kv.push(['พลังงานที่แนะนำต่อวัน (จากใบผล)',`${fmt(X.kcal)} kcal`]);
+  $('plan-main').innerHTML = `<h3>จาก ${fmt(D.weight[0])} kg ไปสู่ ${fmt(D.target)} kg</h3>
+    <dl class="kv">${kv.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
+    <p style="font-size:14.5px">${D.fc<0 && D.mc>0 ? `ควรลดไขมันมากกว่าน้ำหนักที่ลดจริง เพราะส่วนหนึ่งจะถูกแทนด้วยกล้ามเนื้อที่เพิ่มขึ้น ${fmt(D.mc)} kg ` : ''}วิธีที่ได้ผลคือ กินโปรตีนให้พอ (ราว 1.2–1.6 g ต่อน้ำหนักตัว 1 kg) ร่วมกับการฝึกแรงต้าน (เวทเทรนนิ่ง) 2–3 ครั้งต่อสัปดาห์ และคุมพลังงานให้ติดลบเล็กน้อย</p>`;
+  calc(D, X);
+  renderAdvice(D, X, {male, pbfR, smi, smiCut, waistCut, fSt, by, lowest});
+}
+
+/* ---------- personalised lifestyle-medicine advice ---------- */
+// Source: Healthy Lifestyle handbook, Department of Health (กรมอนามัย), MOPH Thailand. pg() = page in that handbook.
+const pg = (...p) => ` <span class="pg">(น.${p.join(', ')})</span>`;
+function renderAdvice(D, X, c){
+  const w = D.weight[0], pLo = Math.round(w*1.2), pHi = Math.round(w*1.6);
+  const mLo = Math.max(20, Math.round(pLo/3)), mHi = Math.min(40, Math.round(pHi/3));
+  const cards = [];
+
+  // abdominal / visceral fat
+  const vHigh = D.vfa>=100, waistOver = X.waist && X.waist>c.waistCut;
+  if(vHigh || D.whr[0]>D.whr[2] || waistOver || D.vfa>=75){
+    cards.push({sev: vHigh?'high':'low', tag: vHigh?'ควรปรับ':'เฝ้าระวัง', title:'ลดไขมันหน้าท้อง (ไขมันช่องท้อง)',
+      why:`พื้นที่ไขมันช่องท้อง ${fmt(D.vfa)} cm² (${vHigh?'เกิน':'ยังต่ำกว่า'} 100) สัดส่วนเอวต่อสะโพก ${fmt(D.whr[0],2)} (เกณฑ์ไม่เกิน ${fmt(D.whr[2],2)})${X.waist?` รอบเอว ${fmt(X.waist)} cm (เกณฑ์ ${c.waistCut} cm)`:''}`,
+      todo:[
+        'ตั้งเป้าที่การลด "มวลไขมัน" โดยเฉพาะไขมันช่องท้อง ไม่ใช่ทำให้ตัวเลขบนตาชั่งลดมากที่สุด'+pg(7),
+        'ลดพลังงานลงวันละ 300–500 kcal จากที่กินอยู่ ไม่อดอาหารหักโหม'+pg(8),
+        'เลือกคาร์โบไฮเดรตเชิงซ้อน เช่น ข้าวกล้อง ธัญพืชไม่ขัดสี กินเป็นมื้อชัดเจน เลี่ยงกินจุบจิบระหว่างมื้อ ให้ระดับอินซูลินลดลง ร่างกายจึงดึงไขมันที่พุงมาใช้ได้'+pg(9),
+        'น้ำตาลที่เติมเพิ่มไม่เกิน 24 กรัม (6 ช้อนชา) ต่อวัน เลือกสินค้าที่น้ำตาลน้อยกว่า 10 กรัมต่อหน่วยบริโภค'+pg(19),
+        'แอโรบิกระดับปานกลาง (ยังพูดเป็นประโยคได้แต่ร้องเพลงไม่ไหว) 150–300 นาทีต่อสัปดาห์ เช่น เดินเร็ว ปั่นจักรยาน ว่ายน้ำ'+pg(21),
+        'ลดแอลกอฮอล์ กำหนดวันปลอดแอลกอฮอล์ในสัปดาห์'+pg(35)
+      ],
+      harm:'ไขมันช่องท้องเกาะตามอวัยวะภายใน และเป็นต้นเหตุของโรคเรื้อรัง'+pg(7)+' เพิ่มความเสี่ยงเบาหวานชนิดที่ 2 ความดันโลหิตสูง และโรคหลอดเลือดหัวใจ'+pg(5),
+      ref:'บทนำ, บทที่ 1, 4, 5, 10'});
+  }
+
+  // total / subcutaneous fat
+  if(c.fSt==='high'){
+    cards.push({sev:'high', tag:'ควรปรับ', title:'ลดไขมันใต้ผิวหนังและไขมันรวม',
+      why:`ไขมันรวม ${fmt(D.bfm[0])} kg (ปกติ ${fmt(D.bfm[1])}–${fmt(D.bfm[2])}) คิดเป็น ${fmt(D.pbf)}% ของน้ำหนัก (เกณฑ์ ${c.pbfR[0]}–${c.pbfR[1]}%)${D.fc<0?` เครื่องแนะนำให้ลดไขมัน ${fmt(-D.fc)} kg`:''} InBody ไม่ได้แยกตัวเลขไขมันใต้ผิวหนังออกมา จึงใช้ไขมันรวมเป็นตัวติดตาม`,
+      todo:[
+        'ไม่มีวิธีลดไขมันเฉพาะจุด ไขมันใต้ผิวหนังจะลดเมื่อร่างกายใช้พลังงานมากกว่าที่ได้รับอย่างต่อเนื่อง',
+        'จัดจาน 2:1:1 ทุกมื้อ: ผักครึ่งจาน โปรตีนไขมันต่ำ ¼ จาน ข้าวหรือแป้งไม่ขัดสี ¼ จาน'+pg(9),
+        'เลือกไขมันดี เช่น น้ำมันมะกอก อะโวคาโด ถั่ว ปลาทะเล อ่านฉลาก ถ้ามี "น้ำตาล" หรือ "ไขมันพืช" อยู่ลำดับที่ 1–2 ของส่วนประกอบ ควรหลีกเลี่ยง'+pg(9,19),
+        'ฝึกแรงต้าน (เวทเทรนนิ่ง) 2–3 วันต่อสัปดาห์ควบคู่ ร่างกายจะสลายเฉพาะไขมันและเก็บกล้ามเนื้อไว้'+pg(10),
+        'เพิ่มกิจกรรมทางกายในชีวิตประจำวัน เช่น เดินขึ้นบันไดแทนลิฟต์ เดินไปทำงาน ทำงานบ้าน'+pg(20),
+        'ดูระยะเวลาที่ใช้ได้ในหัวข้อ "เป้าหมายที่เครื่องแนะนำ" ด้านล่าง'
+      ],
+      harm:'ไขมันส่วนเกินที่สะสมนานเพิ่มความเสี่ยงโรคไม่ติดต่อเรื้อรัง (NCDs)'+pg(5)+' ถ้าลดน้ำหนักผิดวิธีจนเสียกล้ามเนื้อ ระบบเผาผลาญจะถดถอยและน้ำหนักดีดกลับ (Yoyo effect)'+pg(7),
+      ref:'บทที่ 1, 4, 5'});
+  }
+
+  // BMI
+  if(D.bmi>=23){
+    const over = D.bmi>=25;
+    cards.push({sev: over?'high':'low', tag: over?'ควรปรับ':'เฝ้าระวัง', title:'BMI เกินเกณฑ์',
+      why:`BMI ${fmt(D.bmi)} ${over?'เกินเกณฑ์ 25':'อยู่ในช่วง 23–24.9 ซึ่งตามเกณฑ์คนเอเชียถือว่าน้ำหนักเกิน'} เครื่องแนะนำน้ำหนักเป้าหมาย ${fmt(D.target)} kg (${signed(D.wc)} kg)${c.fSt==='high'?' และส่วนที่เกินเป็นไขมันเป็นหลัก':''}`,
+      todo:[
+        'วัดผลด้วยองค์ประกอบร่างกาย ไม่ใช่แค่น้ำหนัก ตรวจ InBody ซ้ำทุก 1–3 เดือน ให้ไขมันลดและกล้ามเนื้อไม่ลด'+pg(7),
+        'ลดพลังงานวันละ 300–500 kcal และกินโปรตีนให้พอ เพื่อไม่ให้ร่างกายสลายกล้ามเนื้อ'+pg(8),
+        D.bmi>30 ? 'BMI เกิน 30 ควรเริ่มจากเดินเร็ว เดินชัน หรือปั่นจักรยานก่อนวิ่ง เพื่อลดแรงกระแทกต่อข้อเข่าข้อเท้า'+pg(24)
+                 : 'เลือกการออกกำลังกายที่ทำแล้วมีความสุขและทำต่อเนื่องได้ตลอดชีวิต'+pg(26),
+        'ระวังโซเดียมแฝงในอาหารแปรรูป จำกัดโซเดียมทั้งวันไม่เกิน 2,000 มิลลิกรัม'+pg(19)
+      ],
+      harm:'น้ำหนักเกินต่อเนื่องเพิ่มความเสี่ยงเบาหวานชนิดที่ 2 ความดันโลหิตสูง และโรคหลอดเลือดหัวใจ'+pg(5)+' และเพิ่มภาระต่อข้อเข่าข้อเท้า'+pg(24),
+      ref:'บทนำ, บทที่ 1, 4, 6'});
+  }
+
+  // muscle
+  const lowSeg = Object.values(c.by).filter(s=>s.p<s.lo);
+  const muscleLow = D.smmPct<90 || c.smi<c.smiCut || lowSeg.length>0;
+  if(muscleLow || D.mc>0){
+    const arm = c.lowest.id==='ra'||c.lowest.id==='la', leg = c.lowest.id==='rl'||c.lowest.id==='ll';
+    cards.push({sev: muscleLow?'high':'low', tag: muscleLow?'ควรปรับ':'ควรเพิ่ม', title:'เพิ่มมวลกล้ามเนื้อ',
+      why:`กล้ามเนื้อโครงร่าง ${fmt(D.smm)} kg = ${fmt(D.smmPct)}% ของมาตรฐาน ดัชนีกล้ามเนื้อ ${fmt(c.smi)} (เกณฑ์ ${c.smiCut})${D.mc>0?` เครื่องแนะนำให้เพิ่มกล้ามเนื้อ ${fmt(D.mc)} kg`:''} ส่วนที่น้อยที่สุดคือ${c.lowest.th} (${fmt(c.lowest.p)}%)`,
+      todo:[
+        `กินโปรตีนวันละ ${pLo}–${pHi} กรัม (1.2–1.6 กรัม × น้ำหนัก ${fmt(w)} kg) ตามเกณฑ์ของคนที่ออกกำลังกายหรือลดน้ำหนัก`+pg(8,11),
+        `แบ่งกินมื้อละประมาณ ${mLo}–${mHi} กรัม ใกล้เคียงกันทุกมื้อ เพราะร่างกายนำโปรตีนไปสร้างกล้ามเนื้อได้ราว 20–40 กรัมต่อมื้อ`+pg(13),
+        'เน้นโปรตีนจากอาหารจริง เช่น เนื้อไม่ติดมัน ปลา ไข่ นม เต้าหู้ หรือโปรตีนพืชหลายชนิดร่วมกัน ใช้เวย์โปรตีนเป็นตัวช่วยเมื่อสะดวก'+pg(12),
+        'ฝึกแรงต้าน (เวทเทรนนิ่ง)กล้ามเนื้อมัดใหญ่ (ขา หลัง อก แขน) 2–3 วันต่อสัปดาห์ ด้วยดัมเบล บอดี้เวท หรือยางยืด'+pg(10,21)
+          + (arm?' เพิ่มท่าสำหรับแขน เช่น ดันกำแพง ยกขวดน้ำ ใช้ยางยืด':leg?' เพิ่มท่าสำหรับขา เช่น สควอท ลุกนั่งบนเก้าอี้':''),
+        'นอนหลับให้พอ ช่วงหลับลึกร่างกายหลั่งโกรทฮอร์โมนเพื่อซ่อมแซมและฟื้นฟูกล้ามเนื้อ'+pg(39),
+        'ผู้ที่เป็นโรคไตเรื้อรังต้องปรึกษาแพทย์ก่อนเพิ่มโปรตีน'+pg(13)
+      ],
+      harm:'กล้ามเนื้อคือ "เตาเผาพลังงาน" ที่พยุงอัตราเผาผลาญพื้นฐาน ถ้ากล้ามเนื้อลด ระบบเผาผลาญถดถอยและน้ำหนักดีดกลับง่าย'+pg(7)
+        +(X.bmrLo && D.bmr<X.bmrLo?` (BMR ของคุณ ${fmt(D.bmr)} kcal ต่ำกว่าช่วงที่แนะนำอยู่แล้ว)`:'')
+        +' เมื่ออายุมากขึ้นจะเสี่ยงหกล้ม ซึ่งเป็นสาเหตุหลักของการบาดเจ็บรุนแรงในผู้สูงอายุ'+pg(22,24),
+      ref:'บทที่ 1, 2, 5, 12'});
+  }
+
+  // bone / minerals
+  const mPos = (D.mineral[0]-D.mineral[1])/(D.mineral[2]-D.mineral[1]);
+  if(D.mineral[0]<D.mineral[1] || mPos<0.33){
+    const low = D.mineral[0]<D.mineral[1];
+    cards.push({sev: low?'high':'low', tag: low?'ควรปรับ':'เฝ้าระวัง', title:'ดูแลมวลกระดูก',
+      why:`แร่ธาตุ ${fmt(D.mineral[0],2)} kg (ปกติ ${fmt(D.mineral[1],2)}–${fmt(D.mineral[2],2)}) ${low?'ต่ำกว่าเกณฑ์':'อยู่ในเกณฑ์แต่ค่อนไปทางล่าง'} ค่านี้ประเมินแร่ธาตุในร่างกายคร่าวๆ ไม่ใช่การวัดความหนาแน่นกระดูกโดยตรง`,
+      todo:[
+        'ฝึกความแข็งแรงของกล้ามเนื้ออย่างน้อย 2 วันต่อสัปดาห์ กล้ามเนื้อที่แข็งแรงช่วยดึงรั้งกระดูกให้หนาแน่น'+pg(21),
+        'เวทเทรนนิ่งช่วยเพิ่มความหนาแน่นของกระดูก ทำได้ทุกวัย เริ่มจากน้ำหนักเบาหรือน้ำหนักตัว'+pg(24),
+        'ฝึกการทรงตัวและความยืดหยุ่น เช่น ยืนขาเดียวสลับข้างขณะแปรงฟัน รำไทเก๊ก โยคะ เพื่อลดความเสี่ยงหกล้ม'+pg(22),
+        'กินอาหารที่มีแคลเซียม เช่น นม ปลาเล็กปลาน้อย เต้าหู้แข็ง ผักใบเขียว และรับแสงแดดเพื่อวิตามินดี <span class="pg">(คำแนะนำทั่วไป ไม่อยู่ในคู่มือ)</span>',
+        `${low?'ควร':'ถ้ามีปัจจัยเสี่ยง เช่น อายุมาก หมดประจำเดือน หรือเคยกระดูกหักง่าย ควร'}ปรึกษาแพทย์เรื่องตรวจมวลกระดูก (DEXA) <span class="pg">(คำแนะนำทั่วไป)</span>`
+      ],
+      harm:'เมื่ออายุมากขึ้นกระดูกจะบางลงจนเป็นโรคกระดูกพรุน'+pg(21)+' เมื่อรวมกับกล้ามเนื้อที่ลดลงและการทรงตัวที่แย่ลง จะเสี่ยงหกล้มและบาดเจ็บรุนแรง'+pg(22),
+      ref:'บทที่ 5, 6'});
+  }
+
+  // extracellular water
+  if(D.ecwr>0.390){
+    cards.push({sev:'high', tag:'ควรปรึกษาแพทย์', title:'น้ำนอกเซลล์สูง',
+      why:`สัดส่วน ECW ${fmt(D.ecwr,3)} เกิน 0.390`,
+      todo:['ปรึกษาแพทย์เพื่อหาสาเหตุ เช่น การบวมน้ำ การอักเสบ หรือโรคไต/หัวใจ','ลดอาหารเค็ม จำกัดโซเดียมไม่เกิน 2,000 มิลลิกรัมต่อวัน'+pg(19)],
+      harm:'ถ้ามีโรคที่ซ่อนอยู่แล้วไม่ได้ตรวจ อาจพบช้าเกินไป', ref:'บทที่ 4'});
+  }
+
+  const order = {high:0, low:1};
+  cards.sort((a,b)=>order[a.sev]-order[b.sev]);
+  $('advs').innerHTML = cards.length ? cards.map(k=>`
+    <article class="adv">
+      <div class="adv-head"><span class="chip s-${k.sev}">${k.tag}</span><h3>${k.title}</h3></div>
+      <div><h4>ทำไมถึงแนะนำข้อนี้</h4><p>${k.why}</p></div>
+      <div><h4>ทำอย่างไร</h4><ul>${k.todo.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+      <div class="harm"><b>ถ้าไม่ปรับพฤติกรรม:</b> ${k.harm}</div>
+      <div class="ref">อ้างอิง: คู่มือ Healthy Lifestyle กรมอนามัย ${k.ref}</div>
+    </article>`).join('')
+    : '<article class="adv"><div class="adv-head"><span class="chip s-ok">ดี</span><h3>ไม่มีจุดที่ต้องแก้เร่งด่วน</h3></div><p>องค์ประกอบร่างกายอยู่ในเกณฑ์ รักษาพื้นฐาน 6 เสาหลักด้านล่างไว้ และตรวจซ้ำทุก 3–6 เดือน</p></article>';
+
+  // three things to start this week
+  const first = [];
+  if(c.fSt==='high' || D.bmi>=23) first.push('ลดพลังงานวันละ 300–500 kcal และจัดจาน 2:1:1 ทุกมื้อ'+pg(8,9));
+  if(muscleLow || D.mc>0) first.push(`ฝึกแรงต้าน (เวทเทรนนิ่ง) 2–3 วันต่อสัปดาห์ และกินโปรตีนวันละ ${pLo}–${pHi} กรัม`+pg(10,11));
+  if(vHigh || D.whr[0]>D.whr[2] || D.vfa>=75) first.push('เดินเร็วหรือปั่นจักรยานสะสม 150 นาทีต่อสัปดาห์ เช่น วันละ 30 นาที 5 วัน'+pg(21));
+  if(first.length<3 && cards.some(k=>k.title==='ดูแลมวลกระดูก')) first.push('ฝึกการทรงตัว เช่น ยืนขาเดียวขณะแปรงฟันทุกเช้า'+pg(22));
+  if(first.length<3) first.push('ตื่นนอนเวลาเดิมทุกวันรวมวันหยุด และงดคาเฟอีนหลัง 14.00 น.'+pg(41,42));
+  if(first.length<3) first.push('ฝึกหายใจช้า เข้า 4 จังหวะ ออก 6 จังหวะ เมื่อรู้สึกเครียด'+pg(29));
+  $('adv-first').innerHTML = `<h3>3 อย่างที่ควรเริ่มสัปดาห์นี้</h3><ol>${first.slice(0,3).map(t=>`<li>${t}</li>`).join('')}</ol>`;
+
+  // pillars everyone needs
+  const P = [
+    ['การนอนหลับ', ['ตื่นและเข้านอนเวลาเดิมทุกวัน รวมวันหยุด ถ้าทำยาก ให้ล็อกเวลาตื่นก่อน'+pg(41), 'งดคาเฟอีนหลัง 14.00 น.'+pg(42), 'ห้องนอนมืดสนิท เย็นราว 22–25°C'+pg(42), 'แอลกอฮอล์ไม่ได้ช่วยให้หลับดี แต่ทำลายวงจรหลับลึก'+pg(42)], 'บทที่ 12–13'],
+    ['ความเครียด', ['หายใจเข้าทางจมูกนับ 1–4 ผ่อนออกทางปากนับ 1–6'+pg(29), 'ใช้เทคนิค 5-4-3-2-1 ดึงตัวเองกลับสู่ปัจจุบัน'+pg(29), 'ถ้านอนไม่หลับหลายคืนติดกัน หรือเศร้าเกิน 2 สัปดาห์ ควรพบผู้เชี่ยวชาญ'+pg(27)], 'บทที่ 7'],
+    ['แอลกอฮอล์และบุหรี่', ['ไม่มีระดับการดื่มที่ปลอดภัย แอลกอฮอล์เป็นสารก่อมะเร็งกลุ่มที่ 1'+pg(35), 'กำหนดวันปลอดแอลกอฮอล์ และดื่มน้ำเปล่าสลับแก้ว'+pg(35), 'ถ้าสูบบุหรี่หรือบุหรี่ไฟฟ้า ดูวิธีเลิกอย่างเป็นระบบในบทที่ 8–9'], 'บทที่ 8–10']
+  ];
+  $('pillars').innerHTML = P.map(([h,items,ref])=>`<article class="adv"><h3>${h}</h3><ul>${items.map(t=>`<li>${t}</li>`).join('')}</ul><div class="ref">อ้างอิง: ${ref}</div></article>`).join('');
+
+  $('adv-refs').innerHTML = `<b>เอกสารอ้างอิง</b><ul>
+    <li>กรมอนามัย กระทรวงสาธารณสุข. คู่มือ Healthy Lifestyle เจาะลึกเทรนด์สุขภาพยุคใหม่ด้วยเวชศาสตร์วิถีชีวิต.</li>
+    <li>World Health Organization (2020). WHO guidelines on physical activity and sedentary behaviour. (อ้างในคู่มือ บทที่ 5)</li>
+    <li>Cava E, Yeat NC, Mittendorfer B (2017). Preserving healthy muscle during weight loss. Advances in Nutrition 8(3):511–519. (บทที่ 1)</li>
+    <li>Jäger R, et al. (2017). ISSN position stand: protein and exercise. JISSN 14:20. (บทที่ 2)</li>
+    <li>Schoenfeld BJ, Aragon AA (2018). How much protein can the body use in a single meal? JISSN 15:10. (บทที่ 2)</li>
+    <li>Garber CE, et al. (2011). ACSM position stand: quantity and quality of exercise. MSSE 43(7):1334–1359. (บทที่ 5–6)</li>
+    <li>World Health Organization (2023). No level of alcohol consumption is safe for our health. (บทที่ 10)</li>
+  </ul>`;
+}
+
+/* ---------- fat-loss pace calculator ---------- */
+let pace = 0.4, calcCtx = null;
+function calc(D, X){
+  if(D){ calcCtx = {fat:-D.fc, kcal:X.kcal}; }
+  const {fat, kcal} = calcCtx;
+  const panel = $('plan-calc');
+  if(!(fat>0)){ $('calc-h').textContent='ไม่จำเป็นต้องลดไขมัน'; ['pace','weeks','weeks-sub','deficit'].forEach(id=>$(id).hidden=true); return; }
+  ['pace','weeks','weeks-sub','deficit'].forEach(id=>$(id).hidden=false);
+  $('calc-h').textContent = `ลองคำนวณระยะเวลาลดไขมัน ${fmt(fat)} kg`;
+  const w = Math.ceil(fat/pace), def = Math.round(pace*7700/7);
+  $('weeks').textContent = `${w} สัปดาห์`;
+  $('weeks-sub').textContent = `ราว ${(w/4.345).toFixed(1)} เดือน ที่ความเร็ว ${pace} kg ต่อสัปดาห์`;
+  $('deficit').innerHTML = `ต้องใช้พลังงานมากกว่าที่กินราว <b class="num">${def}</b> kcal ต่อวัน ${kcal?`เช่น กินตามคำแนะนำ ${fmt(kcal)} kcal แล้วออกกำลังกายเพิ่ม หรือกินน้อยลงเล็กน้อยร่วมกับออกกำลังกาย`:'เช่น กินน้อยลงเล็กน้อยร่วมกับออกกำลังกาย'}${def>500?' ซึ่งเกินช่วง 300–500 kcal ที่คู่มือแนะนำ เสี่ยงเสียกล้ามเนื้อ ควรกินโปรตีนให้พอและฝึกแรงต้าน (เวทเทรนนิ่ง)ควบคู่':''}`;
+  document.querySelectorAll('#pace button').forEach(b=>b.setAttribute('aria-pressed', String(+b.dataset.r===pace)));
+}
+document.querySelectorAll('#pace button').forEach(b=>b.addEventListener('click',()=>{ pace=+b.dataset.r; calc(); }));
+
+/* ---------- technical ---------- */
+function renderTech(D){
+  renderGroup('g-tech', [
+    {id:'pa', th:'มุมเฟสของร่างกาย', en:'Phase Angle (50 kHz)', v:D.pa, u:'°', lo:null, hi:null, min:3, max:9, status:'info',
+     short:'สะท้อนความสมบูรณ์ของผนังเซลล์และคุณภาพของเซลล์',
+     what:'ยิ่งสูงยิ่งดี เซลล์แข็งแรงและมีน้ำในเซลล์ดี ค่าจะสูงขึ้นเมื่อกล้ามเนื้อเพิ่ม และลดลงเมื่ออายุมากหรือป่วย ใบผลไม่ได้ให้ช่วงปกติ',
+     you: D.pa<5 ? `${fmt(D.pa)}° ค่อนข้างต่ำ การฝึกแรงต้าน (เวทเทรนนิ่ง)และโภชนาการที่ดีช่วยเพิ่มได้` : D.pa<6.5 ? `${fmt(D.pa)}° อยู่ในระดับพอใช้ ผู้ใหญ่ที่ออกกำลังกายสม่ำเสมอมักอยู่ราว 6–7° การฝึกแรงต้าน (เวทเทรนนิ่ง)ช่วยเพิ่มได้` : `${fmt(D.pa)}° อยู่ในระดับดี`},
+    {id:'z', th:'ค่าความต้านทาน', en:'Impedance Z (Ω)', v:null, status:'info',
+     short:'ค่าดิบที่เครื่องวัดได้ ใช้คำนวณทุกค่าข้างบน (ตารางด้านล่าง)',
+     what:'เครื่องปล่อยกระแสไฟฟ้าอ่อนๆ หลายความถี่ (1–1000 kHz) ผ่านแขน ลำตัว ขา น้ำนำไฟฟ้าได้ดี ไขมันนำไฟฟ้าได้ไม่ดี ความถี่ต่ำผ่านได้แค่น้ำนอกเซลล์ ความถี่สูงทะลุเข้าเซลล์ได้ จึงแยกน้ำในและนอกเซลล์ได้',
+     you:'ค่าที่ต่ำกว่าหมายถึงส่วนนั้นมีน้ำและกล้ามเนื้อมากกว่า ลำตัวมีค่าต่ำมากเพราะหน้าตัดกว้าง ไม่จำเป็นต้องแปลค่าเหล่านี้เอง'}
+  ]);
+  $('ztable').innerHTML = `<thead><tr><th>ความถี่</th><th>แขนขวา</th><th>แขนซ้าย</th><th>ลำตัว</th><th>ขาขวา</th><th>ขาซ้าย</th></tr></thead><tbody>` +
+    Object.entries(D.z).sort((a,b)=>a[0]-b[0]).map(([f,v])=>`<tr><td class="n">${f} kHz</td>${v.map(x=>`<td class="n">${x.toFixed(1)}</td>`).join('')}</tr>`).join('') + '</tbody>';
+}
+
+/* ---------- loading ---------- */
+function showMsg(text, kind){ const m=$('msg'); m.className='msg '+kind; m.textContent=text; }
+function load(raw, source){
+  const s = extractIBData(raw);
+  let D;
+  try { D = parseIBData(s); }
+  catch(e){ showMsg(e.message, 'err'); return false; }
+  render(D); renderTech(D);
+  store.set('inbody-last', s);
+  showMsg(source==='sample' ? 'กำลังแสดงผลตัวอย่าง ใช้ปุ่มด้านบนเพื่อโหลดผลของคุณเอง'
+        : `โหลดผลวันที่ ${dkDate(D.dk)} รหัส ${D.id} แล้ว`, source==='sample'?'info':'ok');
+  return true;
+}
+
+// camera scanning
+let stream = null, scanning = false;
+const cv = $('cv'), ctx = cv.getContext('2d', {willReadFrequently:true});
+async function startCam(){
+  if(typeof jsQR!=='function'){ showMsg('โหลดตัวอ่าน QR ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า', 'err'); return; }
+  if(!navigator.mediaDevices?.getUserMedia){ showMsg('เบราว์เซอร์นี้เปิดกล้องไม่ได้ ใช้ปุ่ม "อัปโหลดรูป QR" แทน', 'err'); return; }
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  }catch(e){ showMsg('เปิดกล้องไม่ได้ (ไม่ได้รับอนุญาต หรือไม่มีกล้อง) ลองอัปโหลดรูปแทน', 'err'); return; }
+  const v = $('video'); v.srcObject = stream; await v.play();
+  $('cam-box').hidden = false; scanning = true; showMsg('กำลังค้นหา QR…', 'info');
+  const tick = () => {
+    if(!scanning) return;
+    if(v.readyState===v.HAVE_ENOUGH_DATA){
+      cv.width = v.videoWidth; cv.height = v.videoHeight;
+      ctx.drawImage(v,0,0);
+      const code = jsQR(ctx.getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height, {inversionAttempts:'dontInvert'});
+      if(code && /IBData=|^770-/.test(code.data)){ stopCam(); if(load(code.data,'cam')) document.querySelector('.hero').scrollIntoView({behavior:'smooth'}); return; }
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+function stopCam(){ scanning=false; stream?.getTracks().forEach(t=>t.stop()); stream=null; $('cam-box').hidden=true; }
+$('btn-cam').addEventListener('click', startCam);
+$('btn-cam-stop').addEventListener('click', ()=>{ stopCam(); showMsg('ปิดกล้องแล้ว','info'); });
+
+// image upload
+$('btn-img').addEventListener('click', ()=>$('file-img').click());
+$('file-img').addEventListener('change', e=>{
+  const f = e.target.files[0]; e.target.value=''; if(!f) return;
+  if(typeof jsQR!=='function'){ showMsg('โหลดตัวอ่าน QR ไม่สำเร็จ ตรวจสอบอินเทอร์เน็ตแล้วรีเฟรชหน้า', 'err'); return; }
+  showMsg('กำลังอ่าน QR จากรูป…','info');
+  const img = new Image();
+  img.onload = () => {
+    // try a few sizes: QR on a full-sheet photo is small, so larger scales help
+    for(const maxSide of [2000, 1400, 1000, 3000]){
+      const k = Math.min(1, maxSide/Math.max(img.width,img.height));
+      cv.width = Math.round(img.width*k); cv.height = Math.round(img.height*k);
+      ctx.drawImage(img,0,0,cv.width,cv.height);
+      const code = jsQR(ctx.getImageData(0,0,cv.width,cv.height).data, cv.width, cv.height, {inversionAttempts:'attemptBoth'});
+      if(code){ URL.revokeObjectURL(img.src); load(code.data,'img'); return; }
+    }
+    URL.revokeObjectURL(img.src);
+    showMsg('ไม่พบ QR ในรูปนี้ ลองถ่ายให้ใกล้ขึ้นจน QR ชัดและเต็มกรอบมากขึ้น', 'err');
+  };
+  img.onerror = () => showMsg('เปิดรูปนี้ไม่ได้ ลองใช้ไฟล์ JPG หรือ PNG', 'err');
+  img.src = URL.createObjectURL(f);
+});
+
+// paste link
+$('btn-paste-toggle').addEventListener('click', e=>{
+  const box=$('paste-box'); box.hidden=!box.hidden; e.currentTarget.setAttribute('aria-expanded', String(!box.hidden));
+  if(!box.hidden) $('paste').focus();
+});
+$('btn-paste').addEventListener('click', ()=>{ if(load($('paste').value,'paste')){ $('paste-box').hidden=true; } });
+$('btn-sample').addEventListener('click', ()=>load(SAMPLE,'sample'));
+$('btn-clear').addEventListener('click', ()=>{
+  try{ Object.keys(localStorage).filter(k=>k.startsWith('inbody-')).forEach(k=>localStorage.removeItem(k)); }catch(e){}
+  load(SAMPLE,'sample'); showMsg('ลบประวัติในเครื่องนี้แล้ว กำลังแสดงผลตัวอย่าง','info');
+});
+
+// start: link in hash (e.g. index.html#IBData=...), then last loaded result, then sample
+(function init(){
+  const h = location.hash.slice(1);
+  if(h && /IBData=|^770-/.test(decodeURIComponent(h)) && load(h,'hash')) return;
+  const last = store.get('inbody-last');
+  if(last && last!==SAMPLE && load(last,'last')){ showMsg('แสดงผลล่าสุดที่โหลดไว้ในเครื่องนี้','info'); return; }
+  load(SAMPLE,'sample');
+})();
+</script>
+</body>
+</html>
