@@ -14,7 +14,7 @@
   --bg:#f3f5f4; --paper:#ffffff; --ink:#17201f; --muted:#5d6b69; --line:#d9e0de;
   --accent:#0d6e66; --accent-soft:#dcefeb; --on-accent:#ffffff;
   --band:#cfe6df; --track:#e7ecea;
-  --ok:#2f7d4f; --ok-bg:#e1f1e6; --warn:#a8650c; --warn-bg:#fbeed8; --high:#b23a3a; --high-bg:#f8e1df; --info:#3d5f86; --info-bg:#e2eaf4;
+  --ok:#2f7d4f; --ok-bg:#e1f1e6; --warn:#a8650c; --warn-bg:#fbeed8; --high:#b23a3a; --high-bg:#f8e1df; --info:#3d5f86; --info-bg:#e2eaf4; --veg:#4f9a5b; --prot:#c0703a; --carb:#c9a227;
   --f-display:"Bai Jamjuree",system-ui,sans-serif;
   --f-body:"IBM Plex Sans Thai",system-ui,sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
@@ -24,12 +24,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f1514; --paper:#161e1d; --ink:#e3ebe9; --muted:#97a6a3; --line:#2a3634;
   --accent:#5cc2b5; --accent-soft:#163532; --on-accent:#0f1514; --band:#1f4540; --track:#25302e;
-  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c;
+  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c; --veg:#6fbf7b; --prot:#e0925c; --carb:#e3c25a;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f1514; --paper:#161e1d; --ink:#e3ebe9; --muted:#97a6a3; --line:#2a3634;
   --accent:#5cc2b5; --accent-soft:#163532; --on-accent:#0f1514; --band:#1f4540; --track:#25302e;
-  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c;
+  --ok:#6cc58f; --ok-bg:#183323; --warn:#e3a54c; --warn-bg:#3a2a12; --high:#ec7b74; --high-bg:#3d1c1b; --info:#8fb3dc; --info-bg:#1b2a3c; --veg:#6fbf7b; --prot:#e0925c; --carb:#e3c25a;
   color-scheme:dark}
 
 *{box-sizing:border-box}
@@ -188,6 +188,90 @@ textarea{width:100%;min-height:72px;font-family:var(--f-mono);font-size:12.5px;b
 .refs{font-size:13px;color:var(--muted);display:grid;gap:4px}
 .refs ul{margin:0;padding-left:18px;display:grid;gap:3px}
 
+/* deep-dive guides */
+.glinks{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:14px}
+.gbtn{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;border:1px solid var(--accent);color:var(--accent);text-decoration:none;font-weight:500;font-size:14px;background:var(--paper)}
+.gbtn:hover{background:var(--accent-soft)}
+.gbtn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.gbtn::after{content:"→"}
+.gindex{display:flex;flex-wrap:wrap;gap:8px}
+.sheet{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;overscroll-behavior:contain}
+.sheet-bar{position:sticky;top:0;z-index:2;background:var(--paper);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.sheet-bar .in{max-width:860px;margin:0 auto;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:12px}
+.sheet-bar a{color:var(--accent);text-decoration:none;font-weight:600;white-space:nowrap}
+.sheet-bar .t{font-family:var(--f-display);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-body{max-width:860px;margin:0 auto;padding-block:24px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-bottom:calc(64px + env(safe-area-inset-bottom,0px));display:grid;gap:22px}
+.sheet-body h2{font-size:26px}
+#guide-h:focus{outline:none}
+.sheet-body h3{font-size:18px}
+.gsec{display:grid;gap:10px}
+.gsec>p,.gsec li{max-width:70ch}
+.gsec ul,.gsec ol{margin:0;padding-left:22px;display:grid;gap:6px}
+.you{background:var(--accent-soft);border-radius:10px;padding:14px 16px;display:grid;gap:6px}
+.you .big{font-size:30px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:grid;gap:2px}
+.kpi b{font-family:var(--f-display);font-size:24px;line-height:1.2}
+.kpi span{font-size:13px;color:var(--muted)}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th,.tbl td{text-align:left;padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12.5px;color:var(--muted);font-weight:500}
+.tbl td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hbars{display:grid;gap:8px}
+.hbar{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr);gap:10px;align-items:center;font-size:14px}
+.hbar .tr{position:relative;height:18px;background:var(--track);border-radius:4px}
+.hbar .fl{position:absolute;left:0;top:0;bottom:0;border-radius:4px;background:var(--warn)}
+.hbar .fl.over{background:var(--high)}
+.hbar .lim{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.hbar .v{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-family:var(--f-mono);font-size:12px;color:var(--ink)}
+@media (max-width:520px){.hbar{grid-template-columns:1fr;gap:2px}}
+.spoons{display:flex;flex-wrap:wrap;gap:3px;align-items:center}
+.spoons svg{width:22px;height:22px}
+.sp{fill:var(--carb)}
+.sp.over{fill:var(--high)}
+.exs{display:grid;gap:14px}
+.ex{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;grid-template-columns:minmax(0,290px) minmax(0,1fr);gap:16px;align-items:start}
+.ex.focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+@media (max-width:640px){.ex{grid-template-columns:1fr}}
+.frames{display:flex;align-items:center;gap:4px;background:var(--bg);border-radius:10px;padding:6px}
+.frames svg{width:100%;max-width:130px;height:auto;flex:1 1 0}
+.frames .arr{color:var(--muted);font-size:20px}
+.fg .lb{stroke:var(--ink);stroke-width:6;stroke-linecap:round;fill:none}
+.fg .lb.far{stroke:var(--muted);opacity:.55}
+.fg .lb.hl{stroke:var(--accent)}
+.fg .hd{fill:var(--ink)}
+.fg .pr{stroke:var(--muted);stroke-width:3;fill:none;stroke-linecap:round}
+.fg .band{stroke:var(--prot);stroke-width:2.5;fill:none;stroke-dasharray:4 3}
+.fg .btl{fill:var(--info)}
+.fg text{fill:var(--muted);font-size:10px;font-family:var(--f-body)}
+.dose{display:flex;flex-wrap:wrap;gap:6px}
+.dose span{background:var(--accent-soft);color:var(--ink);border-radius:6px;padding:2px 8px;font-size:13.5px;font-family:var(--f-mono)}
+.ex h3{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.ex ol{margin:0;padding-left:20px;display:grid;gap:4px;font-size:14.5px}
+.warnline{font-size:13.5px;color:var(--high)}
+.plate-wrap{display:grid;grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:20px;align-items:center}
+@media (max-width:640px){.plate-wrap{grid-template-columns:1fr}.plate-wrap svg{justify-self:center}}
+.plate-wrap svg{width:100%;max-width:260px}
+.plate-wrap text{font-family:var(--f-body);font-size:12px;fill:#fff;font-weight:600}
+.week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+@media (max-width:640px){.week{grid-template-columns:1fr}}
+.day{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px;display:grid;gap:6px;align-content:start;font-size:13.5px}
+.day b{font-family:var(--f-display)}
+.tag{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12.5px;font-weight:600}
+.tag.st{background:var(--accent-soft);color:var(--accent)}
+.tag.ca{background:var(--warn-bg);color:var(--warn)}
+.tag.ba{background:var(--info-bg);color:var(--info)}
+.tag.re{background:var(--track);color:var(--muted)}
+.picks{display:grid;gap:6px}
+.picks label{display:flex;gap:10px;align-items:flex-start;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;font-size:14.5px}
+.picks input{margin-top:4px;accent-color:var(--accent)}
+.picks .k{margin-left:auto;font-family:var(--f-mono);white-space:nowrap}
+.total{position:sticky;bottom:0;background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:10px 14px;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:600;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+.src{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;display:grid;gap:4px}
+.src a{color:var(--accent)}
+.src ul{margin:0;padding-left:18px;display:grid;gap:3px}
+.more{display:flex;flex-wrap:wrap;gap:8px}
+
 .note{font-size:13.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:16px;max-width:75ch}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -235,9 +319,10 @@ textarea{width:100%;min-height:72px;font-family:var(--f-mono);font-size:12.5px;b
     <div class="takes" id="takes"></div>
   </section>
 
-  <section>
+  <section id="advice">
     <div class="sec-head"><div class="eyebrow">เวชศาสตร์วิถีชีวิต</div><h2>คำแนะนำเฉพาะคุณ</h2>
-      <p>คำแนะนำด้านล่างเลือกจากค่าในผล InBody ของคุณ อ้างอิงคู่มือ Healthy Lifestyle ของกรมอนามัย ตัวเลขในวงเล็บ เช่น "น.21" คือเลขหน้าในคู่มือ</p></div>
+      <p>คำแนะนำด้านล่างเลือกจากค่าในผล InBody ของคุณ อ้างอิงคู่มือ Healthy Lifestyle ของกรมอนามัย ตัวเลขในวงเล็บ เช่น "น.21" คือเลขหน้าในคู่มือ กดปุ่มสีเขียวเพื่อดูวิธีทำแบบละเอียด พร้อมภาพและปริมาณที่เหมาะกับคุณ</p></div>
+    <div class="gsec"><h3 style="font-size:16px">คู่มือละเอียดทั้งหมด</h3><div class="gindex" id="gindex"></div></div>
     <div class="first" id="adv-first"></div>
     <div class="advs" id="advs"></div>
     <h3 style="margin-top:8px">พื้นฐานที่ทุกคนควรทำ</h3>
@@ -313,6 +398,11 @@ textarea{width:100%;min-height:72px;font-family:var(--f-mono);font-size:12.5px;b
   </section>
 
   <p class="note">หน้านี้อธิบายตัวเลขจากใบผล InBody เพื่อให้เข้าใจง่ายขึ้น ไม่ใช่การวินิจฉัยทางการแพทย์ ค่าจากเครื่องวัดแบบกระแสไฟฟ้า (BIA) เปลี่ยนได้ตามปริมาณน้ำ อาหาร และการออกกำลังกายก่อนวัด ควรวัดเวลาเดิม ก่อนอาหาร และหลังเข้าห้องน้ำทุกครั้งเพื่อเทียบผลได้แม่นขึ้น หากมีโรคประจำตัวหรือวางแผนลดน้ำหนักจริงจัง ควรปรึกษาแพทย์หรือนักโภชนาการ <button type="button" class="btn" id="btn-clear" style="margin-top:10px;font-size:13px;padding:4px 10px">ลบประวัติที่บันทึกในเครื่องนี้</button></p>
+</div>
+
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" hidden>
+  <div class="sheet-bar"><div class="in"><a href="#advice" id="sheet-back">← กลับ</a><span class="t" id="sheet-title"></span></div></div>
+  <div class="sheet-body" id="sheet-body"></div>
 </div>
 
 <script>
@@ -793,11 +883,21 @@ function renderAdvice(D, X, c){
 
   const order = {high:0, low:1};
   cards.sort((a,b)=>order[a.sev]-order[b.sev]);
+  const LINKS = {
+    'ลดไขมันหน้าท้อง (ไขมันช่องท้อง)':['energy','sugar','cardio','week'],
+    'ลดไขมันใต้ผิวหนังและไขมันรวม':['plate','fat','energy','strength'],
+    'BMI เกินเกณฑ์':['plate','energy','sodium','cardio'],
+    'เพิ่มมวลกล้ามเนื้อ':['protein','strength','week'],
+    'ดูแลมวลกระดูก':['strength','balance'],
+    'น้ำนอกเซลล์สูง':['sodium']
+  };
+  const glinks = ids => `<div class="glinks"><b style="font-size:14px">ดูวิธีละเอียด:</b>${ids.map(id=>`<a class="gbtn" href="#guide-${id}">${GUIDES[id].short}</a>`).join('')}</div>`;
   $('advs').innerHTML = cards.length ? cards.map(k=>`
     <article class="adv">
       <div class="adv-head"><span class="chip s-${k.sev}">${k.tag}</span><h3>${k.title}</h3></div>
       <div><h4>ทำไมถึงแนะนำข้อนี้</h4><p>${k.why}</p></div>
       <div><h4>ทำอย่างไร</h4><ul>${k.todo.map(t=>`<li>${t}</li>`).join('')}</ul></div>
+      ${LINKS[k.title] ? glinks(LINKS[k.title]) : ''}
       <div class="harm"><b>ถ้าไม่ปรับพฤติกรรม:</b> ${k.harm}</div>
       <div class="ref">อ้างอิง: คู่มือ Healthy Lifestyle กรมอนามัย ${k.ref}</div>
     </article>`).join('')
@@ -805,13 +905,23 @@ function renderAdvice(D, X, c){
 
   // three things to start this week
   const first = [];
-  if(c.fSt==='high' || D.bmi>=23) first.push('ลดพลังงานวันละ 300–500 kcal และจัดจาน 2:1:1 ทุกมื้อ'+pg(8,9));
-  if(muscleLow || D.mc>0) first.push(`ฝึกแรงต้าน (เวทเทรนนิ่ง) 2–3 วันต่อสัปดาห์ และกินโปรตีนวันละ ${pLo}–${pHi} กรัม`+pg(10,11));
-  if(vHigh || D.whr[0]>D.whr[2] || D.vfa>=75) first.push('เดินเร็วหรือปั่นจักรยานสะสม 150 นาทีต่อสัปดาห์ เช่น วันละ 30 นาที 5 วัน'+pg(21));
-  if(first.length<3 && cards.some(k=>k.title==='ดูแลมวลกระดูก')) first.push('ฝึกการทรงตัว เช่น ยืนขาเดียวขณะแปรงฟันทุกเช้า'+pg(22));
+  const gl = (...ids) => ' ' + ids.map(id=>`<a class="gbtn" style="padding:2px 10px;font-size:13px" href="#guide-${id}">${GUIDES[id].short}</a>`).join(' ');
+  if(c.fSt==='high' || D.bmi>=23) first.push('ลดพลังงานวันละ 300–500 kcal และจัดจาน 2:1:1 ทุกมื้อ'+pg(8,9)+gl('plate','energy'));
+  if(muscleLow || D.mc>0) first.push(`ฝึกแรงต้าน (เวทเทรนนิ่ง) 2–3 วันต่อสัปดาห์ และกินโปรตีนวันละ ${pLo}–${pHi} กรัม`+pg(10,11)+gl('strength','protein'));
+  if(vHigh || D.whr[0]>D.whr[2] || D.vfa>=75) first.push('เดินเร็วหรือปั่นจักรยานสะสม 150 นาทีต่อสัปดาห์ เช่น วันละ 30 นาที 5 วัน'+pg(21)+gl('cardio'));
+  if(first.length<3 && cards.some(k=>k.title==='ดูแลมวลกระดูก')) first.push('ฝึกการทรงตัว เช่น ยืนขาเดียวขณะแปรงฟันทุกเช้า'+pg(22)+gl('balance'));
   if(first.length<3) first.push('ตื่นนอนเวลาเดิมทุกวันรวมวันหยุด และงดคาเฟอีนหลัง 14.00 น.'+pg(41,42));
   if(first.length<3) first.push('ฝึกหายใจช้า เข้า 4 จังหวะ ออก 6 จังหวะ เมื่อรู้สึกเครียด'+pg(29));
   $('adv-first').innerHTML = `<h3>3 อย่างที่ควรเริ่มสัปดาห์นี้</h3><ol>${first.slice(0,3).map(t=>`<li>${t}</li>`).join('')}</ol>`;
+
+  // context for the deep-dive guides
+  const fatLoss = D.fc<0;
+  const K = X.kcal ?? Math.round((D.bmr*1.5 - (fatLoss?400:0))/50)*50;
+  CUR = {D, X, c, w, pLo, pHi, mLo, mHi, K, fatLoss, muscleLow: muscleLow || D.mc>0,
+    kSrc: X.kcal ? 'ค่าพลังงานที่แนะนำในใบผล InBody' : `ประมาณจาก BMR ${fmt(D.bmr)} × 1.5 (กิจกรรมเบา–ปานกลาง)${fatLoss?' ลบ 400 kcal เพื่อลดไขมัน':''}`,
+    belly: vHigh || D.whr[0]>D.whr[2] || D.vfa>=75, bone: cards.some(k=>k.title==='ดูแลมวลกระดูก')};
+  $('gindex').innerHTML = Object.keys(GUIDES).map(id=>`<a class="gbtn" href="#guide-${id}">${GUIDES[id].short}</a>`).join('');
+  if(location.hash.startsWith('#guide-')) openGuide(location.hash.slice(7));
 
   // pillars everyone needs
   const P = [
@@ -831,6 +941,384 @@ function renderAdvice(D, X, c){
     <li>World Health Organization (2023). No level of alcohol consumption is safe for our health. (บทที่ 10)</li>
   </ul>`;
 }
+
+/* ---------- deep-dive guides (pictures, amounts, examples) ---------- */
+let CUR = null;
+const SRC = {
+  book:   ['คู่มือ Healthy Lifestyle เวชศาสตร์วิถีชีวิต กรมอนามัย', null],
+  sodium: ['กรมอนามัย: วิธี "เช็กโซเดียม" ใน 1 วัน ไม่เกิน 2,000 มิลลิกรัม (20 มี.ค. 2566)', 'https://multimedia.anamai.moph.go.th/news/200366/'],
+  sugar:  ['อนามัยมีเดีย กรมอนามัย: ลดหวาน ลด NCDs', 'https://multimedia.anamai.moph.go.th/infographics/info763_ncds_3/'],
+  fat:    ['อนามัยมีเดีย กรมอนามัย: ลดมัน ลด NCDs', 'https://multimedia.anamai.moph.go.th/infographics/info763_ncds_4/'],
+  fitt:   ['กรมอนามัย: ลดไขมันด้วยหลัก FITT (26 ก.พ. 2564)', 'https://multimedia.anamai.moph.go.th/news/260264/'],
+  band:   ['อนามัยมีเดีย ศูนย์อนามัยที่ 10: บริหารหลังด้วยยางยืด', 'https://multimedia.anamai.moph.go.th/video-knowledges/back-exercise-by-elastic-band/'],
+  meal:   ['กรมอนามัย: พลังงานข้าวมันไก่ และโซเดียมต้มพะโล้ (12 ส.ค. 2565)', 'https://multimedia.anamai.moph.go.th/news/120865-2/'],
+  exch:   ['คณะแพทยศาสตร์ศิริราชพยาบาล: รายการอาหารแลกเปลี่ยน (อ้างอิงตารางคุณค่าอาหารไทย กองโภชนาการ กรมอนามัย)', 'https://www.si.mahidol.ac.th/th/division/hph/admin/download_files/161_49_1CxjIwl.pdf']
+};
+const srcHTML = keys => `<div class="src"><b>แหล่งข้อมูล</b><ul>${keys.map(k=>{ const [t,u]=SRC[k]; return `<li>${u?`<a href="${u}" target="_blank" rel="noopener">${t}</a>`:t}</li>`; }).join('')}</ul></div>`;
+const tsp = n => fmt(n);
+
+// stick figure, side view facing right; p = joints, o.hl = highlighted parts, o.props = extra svg
+function fig(p, o={}){
+  const pt = a => a.join(','), hl = part => (o.hl||[]).includes(part) ? ' hl' : '';
+  const line = (pts, cls) => `<polyline class="lb${cls}" points="${pts.map(pt).join(' ')}"/>`;
+  return `<svg class="fg" viewBox="0 0 130 140" aria-hidden="true">${o.props||''}
+    ${p.k2 ? line([p.hp,p.k2,p.f2],' far'+hl('leg')) : ''}
+    ${p.e2 ? line([p.nk,p.e2,p.h2],' far'+hl('arm')) : ''}
+    ${line([p.nk,p.hp], hl('torso'))}
+    ${line([p.hp,p.k,p.f], hl('leg'))}
+    ${line([p.nk,p.e,p.h], hl('arm'))}
+    <circle class="hd" cx="${p.hd[0]}" cy="${p.hd[1]}" r="9"/>${o.top||''}</svg>`;
+}
+const FLOOR = '<line class="pr" x1="4" y1="133" x2="126" y2="133"/>';
+const frames = (...svgs) => `<div class="frames">${svgs.join('<span class="arr" aria-hidden="true">→</span>')}</div>`;
+
+const EXERCISES = [
+  {id:'squat', area:'leg', name:'ลุกนั่งเก้าอี้ (สควอท)', target:'ต้นขา สะโพก ก้น',
+   pics: () => frames(
+     fig({hd:[62,18],nk:[62,32],hp:[62,76],k:[64,102],f:[62,130],e:[78,46],h:[94,48],k2:[60,102],f2:[58,130]}, {hl:['leg'], props:FLOOR+'<path class="pr" d="M16 66 V132 M16 98 H44 M44 98 V132"/>'}),
+     fig({hd:[76,44],nk:[70,56],hp:[46,92],k:[74,98],f:[64,130],e:[86,64],h:[102,64],k2:[70,100],f2:[60,130]}, {hl:['leg'], props:FLOOR+'<path class="pr" d="M16 66 V132 M16 98 H44 M44 98 V132"/>'})),
+   dose:['10–15 ครั้ง','2–3 เซต','พักเซตละ 1 นาที'], doseSrc:'จำนวนครั้งและเซตใช้ตามแนวทางท่ายันกำแพงของกรมอนามัย',
+   steps:['ยืนหน้าเก้าอี้ เท้ากว้างเท่าสะโพก ยื่นแขนไปข้างหน้า','ดันก้นไปข้างหลัง ย่อตัวลงช้าๆ จนก้นแตะเก้าอี้เบาๆ','ออกแรงที่ส้นเท้า ลุกขึ้นยืนตรง หายใจออกขณะลุก'],
+   easy:'ใช้มือดันเข่าหรือที่วางแขนช่วยตอนลุก', hard:'ถือขวดน้ำแนบอก หรือย่อโดยไม่แตะเก้าอี้',
+   mistake:'เข่าบิดเข้าด้านใน หรือส้นเท้ายกขึ้น'},
+  {id:'wallpush', area:'arm', name:'ท่ายันกำแพง (Wall push-up)', target:'อก หัวไหล่ แขนด้านหลัง',
+   pics: () => frames(
+     fig({hd:[92,30],nk:[86,42],hp:[66,82],k:[58,106],f:[52,130],e:[99,45],h:[112,48]}, {hl:['arm','torso'], props:FLOOR+'<line class="pr" x1="115" y1="8" x2="115" y2="133"/>'}),
+     fig({hd:[101,40],nk:[94,50],hp:[70,84],k:[60,106],f:[52,130],e:[94,68],h:[112,52]}, {hl:['arm','torso'], props:FLOOR+'<line class="pr" x1="115" y1="8" x2="115" y2="133"/>'})),
+   dose:['ค้าง 10 วินาที','ทำซ้ำ 10–15 ครั้ง','ถ้าไหว 2–3 เซต'], doseSrc:'กรมอนามัย หลัก FITT', src:'fitt',
+   steps:['ยืนเท้าชิด ยื่นมือสุดแขนยันกำแพง เขยิบปลายเท้าออกให้ห่างกำแพงพอดีระยะแขน','ลำตัวเอียงเล็กน้อย โน้มตัวเข้าหากำแพง งอศอกให้ข้อศอกอยู่ช่วงลำตัว','ออกแรงดันที่มือ ค้างไว้ 10 วินาที แล้วยืดแขนกลับท่าเดิม'],
+   easy:'ยืนใกล้กำแพงขึ้น', hard:'ยันขอบโต๊ะหรือเก้าอี้ที่มั่นคงแทนกำแพง',
+   mistake:'สะโพกหย่อนหรือโก่ง ให้ลำตัวตรงเป็นแนวเดียว'},
+  {id:'row', area:'arm', name:'ดึงยางยืด ท่านั่ง', target:'หลัง สะบัก แขน',
+   pics: () => {
+     const base = {hd:[42,60],nk:[40,74],hp:[40,118],k:[72,120],f:[102,120]};
+     const props = '<line class="pr" x1="4" y1="125" x2="126" y2="125"/>';
+     return frames(
+       fig({...base, e:[58,92], h:[74,104]}, {hl:['arm'], props: props+'<path class="band" d="M74 104 L104 118"/>'}),
+       fig({...base, e:[22,94], h:[44,96]}, {hl:['arm'], props: props+'<path class="band" d="M44 96 L104 118"/>'}));
+   },
+   dose:['15–20 ครั้ง','3–4 รอบ'], doseSrc:'อนามัยมีเดีย ศูนย์อนามัยที่ 10', src:'band',
+   steps:['นั่งตัวตรง แอ่นอก เหยียดขา คล้องยางยืดไว้ที่ปลายเท้า มือจับยางยืดให้ตึงบริเวณหัวเข่า','ดึงยางยืดเข้าหาตัวจนศอกผ่านลำตัวไปด้านหลัง บีบสะบักเข้าหากัน ดึงมาที่ช่วงลิ้นปี่','ปล่อยแขนกลับตำแหน่งเดิมช้าๆ'],
+   easy:'จับยางยืดให้หลวมขึ้น', hard:'จับยางยืดให้สั้นลงหรือใช้ยางที่แข็งขึ้น',
+   mistake:'ห่อไหล่หรือเอนตัวไปข้างหลังเพื่อดึง', caution:'ผู้มีความดันโลหิตสูงควรบริหารด้วยความระมัดระวัง เพราะเป็นท่าที่ต้องใช้แรง'},
+  {id:'plank', area:'trunk', name:'แพลงก์กับเก้าอี้', target:'หน้าท้อง แกนกลางลำตัว หัวไหล่',
+   pics: () => frames(fig({hd:[107,72],nk:[98,82],hp:[66,101],k:[40,116],f:[14,130],e:[101,89],h:[104,97]}, {hl:['torso'], props:FLOOR+'<path class="pr" d="M96 98 H126 M98 98 V133 M124 98 V133 M126 98 V62"/>'})),
+   dose:['ค้าง 30–60 วินาที','ถ้าไหว 2–3 เซต'], doseSrc:'กรมอนามัย หลัก FITT', src:'fitt',
+   steps:['โน้มตัวลง ยันมือไว้บนเก้าอี้หรือเบาะ ยืดแขนให้สุด','ค่อยๆ ขยับปลายเท้าออกห่างจนลำตัวตรง หลังไม่หย่อนหรือโค้ง ทำมุมเฉียงกับพื้นราว 45 องศา','ค้างไว้ หายใจปกติ ไม่กลั้นหายใจ'],
+   easy:'ยันมือบนโต๊ะที่สูงกว่า', hard:'ทำบนพื้น',
+   mistake:'สะโพกตกหรือก้นโด่ง'},
+  {id:'lunge', area:'leg', name:'ก้าวย่อ (Lunge)', target:'ต้นขา สะโพก ทีละข้าง',
+   pics: () => frames(
+     fig({hd:[62,18],nk:[62,32],hp:[62,76],k:[64,102],f:[62,130],e:[52,54],h:[62,72],k2:[60,102],f2:[58,130]}, {hl:['leg'], props:FLOOR}),
+     fig({hd:[61,40],nk:[60,54],hp:[58,94],k:[84,100],f:[86,130],e:[48,72],h:[58,90],k2:[44,124],f2:[22,128]}, {hl:['leg'], props:FLOOR})),
+   dose:['ข้างละ 8–12 ครั้ง','2–3 เซต'], doseSrc:'แนวทางทั่วไป',
+   steps:['ยืนตรง มือเท้าสะเอว','ก้าวขาไปข้างหน้า 1 ก้าวยาว ย่อตัวลงจนเข่าหน้างอราว 90 องศา','ดันเท้าหน้ากลับมายืนท่าเดิม สลับข้าง'],
+   easy:'จับพนักเก้าอี้ช่วยทรงตัว และย่อแค่ครึ่งทาง', hard:'ถือขวดน้ำสองมือ',
+   mistake:'เข่าหน้าเลยปลายเท้ามาก หรือลำตัวโน้มไปข้างหน้า'},
+  {id:'press', area:'arm', name:'ยกขวดน้ำเหนือศีรษะ', target:'หัวไหล่ แขน',
+   pics: () => {
+     const b = {hd:[60,34],nk:[60,47],hp:[60,88],k:[62,112],f:[60,136-3]};
+     const bottle = h => `<rect class="btl" x="${h[0]-4}" y="${h[1]-12}" width="8" height="16" rx="2"/>`;
+     return frames(fig({...b,e:[68,64],h:[70,46]}, {hl:['arm'], props:FLOOR, top:bottle([70,46])}),
+                   fig({...b,e:[64,28],h:[62,12]}, {hl:['arm'], props:FLOOR, top:bottle([62,12])}));
+   },
+   dose:['10–15 ครั้ง','2–3 เซต','ขวดน้ำ 0.6–1.5 ลิตร'], doseSrc:'แนวทางทั่วไป (คู่มือแนะนำใช้ขวดน้ำเป็นอุปกรณ์ น.21)',
+   steps:['ยืนหรือนั่งหลังตรง ถือขวดน้ำระดับไหล่','ดันขวดขึ้นเหนือศีรษะจนแขนเกือบตึง หายใจออก','ลดลงช้าๆ กลับระดับไหล่'],
+   easy:'ใช้ขวดเล็กหรือทำทีละข้าง', hard:'ใช้ขวดใหญ่ขึ้นหรือดัมเบล',
+   mistake:'แอ่นหลังขณะดันขึ้น'}
+];
+
+function exCard(x, focus){
+  return `<article class="ex${focus?' focus':''}" id="ex-${x.id}">
+    ${x.pics()}
+    <div style="display:grid;gap:8px;min-width:0">
+      <h3>${x.name}${focus?'<span class="chip s-low">เน้นสำหรับคุณ</span>':''}</h3>
+      <div class="muted" style="font-size:14px">กล้ามเนื้อที่ใช้: ${x.target}</div>
+      <div class="dose">${x.dose.map(d=>`<span>${d}</span>`).join('')}</div>
+      <ol>${x.steps.map(s=>`<li>${s}</li>`).join('')}</ol>
+      <div style="font-size:14px"><b>ง่ายลง:</b> ${x.easy} · <b>ยากขึ้น:</b> ${x.hard}</div>
+      <div style="font-size:14px"><b>ระวัง:</b> ${x.mistake}</div>
+      ${x.caution?`<div class="warnline">${x.caution}</div>`:''}
+      <div class="pg" style="white-space:normal">ปริมาณ: ${x.doseSrc}</div>
+    </div></article>`;
+}
+
+function hbars(items, limit, unit){
+  const max = Math.max(limit, ...items.map(i=>i.v)) * 1.08;
+  return `<div class="hbars">${items.map(i=>`<div class="hbar"><span>${i.n}</span><div class="tr">
+    <div class="fl${i.v>limit?' over':''}" style="width:${i.v/max*100}%"></div>
+    <div class="lim" style="left:${limit/max*100}%" title="ไม่ควรเกิน ${limit} ${unit} ต่อวัน"></div>
+    <span class="v">${fmt(i.v)} ${unit}</span></div></div>`).join('')}
+    <div class="hbar"><span></span><div class="muted" style="font-size:12.5px">เส้นดำ = ปริมาณสูงสุดที่ควรได้ทั้งวัน (${limit} ${unit}) แถบแดง = กินชิ้นเดียวก็เกินทั้งวัน</div></div></div>`;
+}
+const SPOON = cls => `<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse class="sp ${cls}" cx="7" cy="12" rx="6" ry="4.5"/><rect class="sp ${cls}" x="12" y="10.8" width="11" height="2.4" rx="1.2"/></svg>`;
+const spoons = (n, limit=99) => `<span class="spoons" role="img" aria-label="${n} ช้อนชา">${Array.from({length:Math.ceil(n)},(_,i)=>SPOON(i>=limit?'over':'')).join('')}</span>`;
+
+// day plan from the Thai food exchange lists (Siriraj, based on DoH food tables)
+function dayPlan(K, P){
+  const milk=1, veg=4, fruit=K<1600?2:3, fat=K<1600?4:5;
+  const baseK = milk*120 + veg*25 + fruit*60 + fat*45, baseP = milk*8 + veg*2;
+  let best=null;
+  for(let m=4; m<=20; m++){
+    const r = Math.max(4, Math.round((K - baseK - m*55)/80));
+    best = {m, r, milk, veg, fruit, fat, kcal: baseK + m*55 + r*80, prot: baseP + 2*r + 7*m};
+    if(best.prot >= P) break;
+  }
+  return best;
+}
+const half = v => Math.round(v*2)/2;
+
+const PLATE_SVG = `<svg viewBox="0 0 220 220" role="img" aria-label="จาน 2:1:1 ผักครึ่งจาน โปรตีนหนึ่งในสี่ ข้าวแป้งหนึ่งในสี่">
+  <circle cx="110" cy="110" r="104" fill="var(--paper)" stroke="var(--line)" stroke-width="4"/>
+  <path d="M110 110 L110 16 A94 94 0 0 0 110 204 Z" fill="var(--veg)"/>
+  <path d="M110 110 L110 16 A94 94 0 0 1 204 110 Z" fill="var(--prot)"/>
+  <path d="M110 110 L204 110 A94 94 0 0 1 110 204 Z" fill="var(--carb)"/>
+  <text x="62" y="106" text-anchor="middle">ผัก</text><text x="62" y="122" text-anchor="middle">2 ส่วน</text>
+  <text x="150" y="72" text-anchor="middle">โปรตีน</text><text x="150" y="88" text-anchor="middle">1 ส่วน</text>
+  <text x="150" y="146" text-anchor="middle">ข้าว-แป้ง</text><text x="150" y="162" text-anchor="middle">1 ส่วน</text></svg>`;
+
+const GUIDES = {
+  plate: {short:'จาน 2:1:1 และปริมาณต่อวัน', title:'กินเท่าไหร่ถึงพอ: จาน 2:1:1 และปริมาณต่อวัน', src:['book','exch','sodium'],
+    render: C => {
+      const p = dayPlan(C.K, C.pLo);
+      const ricePM = half(p.r/3), meatPM = Math.round(p.m*2/3);
+      return `
+      <div class="you"><div>พลังงานที่ควรได้ต่อวันของคุณ</div><div class="big">≈ ${fmt(C.K)} kcal</div><div class="muted" style="font-size:13.5px">${C.kSrc}</div></div>
+      <div class="gsec"><h3>1 มื้อ ควรมีหน้าตาแบบนี้</h3>
+        <div class="plate-wrap">${PLATE_SVG}
+          <ul>
+            <li><b>ผักครึ่งจาน (2 ส่วน):</b> ผักใบเขียวและผักหลากสี อย่างน้อย 2 ทัพพีต่อมื้อ ช่วยให้อิ่มนาน${pg(9)}</li>
+            <li><b>โปรตีนไขมันต่ำ ¼ จาน:</b> ปลา อกไก่ ไข่ เต้าหู้ ของคุณประมาณ <b>${meatPM} ช้อนกินข้าวต่อมื้อ</b>${pg(9)}</li>
+            <li><b>ข้าวหรือแป้ง ¼ จาน:</b> เลือกข้าวไม่ขัดสี ของคุณประมาณ <b>${ricePM} ทัพพีต่อมื้อ</b>${pg(9)}</li>
+            <li>กินเป็นมื้อชัดเจน เลี่ยงกินจุบจิบระหว่างมื้อ ลดหวาน ลดเค็ม${pg(9)}</li>
+          </ul></div></div>
+      <div class="gsec"><h3>ปริมาณทั้งวันที่คำนวณให้คุณ</h3>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>หมวด</th><th>ต่อวัน</th><th>เทียบ 1 ส่วนเท่ากับ</th></tr></thead><tbody>
+          <tr><td>ข้าว-แป้ง</td><td class="n">${p.r} ทัพพี</td><td>ข้าวสวย 1 ทัพพี (≈60 กรัม) = ก๋วยเตี๋ยว 1 ทัพพี = ขนมปัง 1 แผ่น = ข้าวเหนียว ½ ทัพพี ให้ 80 kcal</td></tr>
+          <tr><td>เนื้อสัตว์</td><td class="n">${p.m*2} ช้อนกินข้าว</td><td>เนื้อสุก 2 ช้อนกินข้าว (30 กรัม) = ไข่ 1 ฟอง = เต้าหู้เหลือง ½ แผ่น ให้โปรตีน 7 กรัม</td></tr>
+          <tr><td>ผัก</td><td class="n">≥ ${p.veg} ทัพพี</td><td>ผักสุก 1 ทัพพี ≈ ½ ถ้วยตวง ผักใบกินได้ตามต้องการ แต่ไม่ผัดน้ำมันหรือชุบแป้งทอด</td></tr>
+          <tr><td>ผลไม้</td><td class="n">${p.fruit} ส่วน</td><td>1 ส่วนให้ 60 kcal เลี่ยงผลไม้เชื่อม กวน ดอง และน้ำจิ้ม</td></tr>
+          <tr><td>นม</td><td class="n">${p.milk} แก้ว</td><td>นมจืดพร่องมันเนย 240 มล. ให้โปรตีน 8 กรัม 120 kcal</td></tr>
+          <tr><td>น้ำมัน</td><td class="n">≤ ${p.fat} ช้อนชา</td><td>น้ำมัน 1 ช้อนชา = 45 kcal กรมอนามัยแนะนำไม่เกิน 6 ช้อนชาต่อวัน</td></tr>
+        </tbody></table></div>
+        <p class="muted" style="font-size:14px">รวมประมาณ <b>${fmt(p.kcal)} kcal</b> และโปรตีน <b>${p.prot} กรัม</b> (เป้าหมายของคุณ ${C.pLo}–${C.pHi} กรัม) คำนวณด้วยรายการอาหารแลกเปลี่ยน</p></div>
+      <div class="gsec"><h3>หวาน มัน เค็ม: หลัก 6 : 6 : 1 ของกรมอนามัย</h3>
+        <ul><li>น้ำตาลไม่เกิน 6 ช้อนชาต่อวัน ${spoons(6)}</li><li>น้ำมันไม่เกิน 6 ช้อนชาต่อวัน ${spoons(6)}</li><li>เกลือไม่เกิน 1 ช้อนชาต่อวัน ${spoons(1)}</li></ul></div>`;
+    }},
+
+  protein: {short:'โปรตีนกินเท่าไหร่', title:'โปรตีน: กินเท่าไหร่ กินอะไร', src:['book','exch'],
+    render: C => {
+      const foods = [
+        ['ปลา (เนื้อล้วน)','2 ช้อนกินข้าว',7,35],['สันในไก่','2 ช้อนกินข้าว',7,35],['กุ้ง (ขนาด 2 นิ้ว)','4 ตัว',7,35],['ไข่ขาว','2 ฟอง',7,35],['ลูกชิ้นปลา','5 ลูก',7,35],
+        ['อกไก่ ไม่ติดหนัง','2 ช้อนกินข้าว',7,55],['ลูกชิ้นไก่ หมู','5 ลูก',7,55],['ไข่ไก่','1 ฟอง',7,75],['เต้าหู้เหลือง (แข็ง)','½ แผ่น',7,75],['เต้าหู้ไข่','1 หลอด',7,75],
+        ['หมูสามชั้น / ไก่ติดหนัง','2 ช้อนกินข้าว',7,100],['นมจืดพร่องมันเนย','240 มล.',8,120],['ข้าวสวย','1 ทัพพี',2,80]];
+      const target = Math.round(C.pLo/3);
+      const menu = [
+        ['เช้า', [['ไข่ไก่ 2 ฟอง',14],['นมจืดพร่องมันเนย 1 แก้ว',8],['ข้าวสวย 2 ทัพพี',4]]],
+        ['กลางวัน', [['อกไก่ 6 ช้อนกินข้าว',21],['ข้าวสวย 2 ทัพพี',4],['ผัก 2 ทัพพี',4]]],
+        ['เย็น', [['ปลา 6 ช้อนกินข้าว',21],['เต้าหู้เหลือง ½ แผ่น',7],['ข้าวสวย 2 ทัพพี',4]]]];
+      const tot = menu.reduce((s,[,it])=>s+it.reduce((a,[,g])=>a+g,0),0);
+      const gap = C.pLo - tot;
+      return `
+      <div class="you"><div>โปรตีนที่ควรได้ต่อวันของคุณ</div><div class="big">${C.pLo}–${C.pHi} กรัม</div>
+        <div style="font-size:14.5px">= 1.2–1.6 กรัม × น้ำหนัก ${fmt(C.w)} kg แบ่งกิน <b>มื้อละ ${C.mLo}–${C.mHi} กรัม</b> ใกล้เคียงกันทุกมื้อ${pg(8,11,13)}</div></div>
+      <div class="gsec"><h3>เทียบปริมาณโปรตีนในอาหาร</h3>
+        <p>เนื้อสัตว์ทุกชนิด 1 ส่วน (สุก 30 กรัม หรือ 2 ช้อนกินข้าว) ให้โปรตีนเท่ากันที่ 7 กรัม ต่างกันที่ไขมันและพลังงาน เลือกแถวบนๆ ได้โปรตีนเท่ากันแต่พลังงานน้อยกว่า</p>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>อาหาร</th><th>ปริมาณ</th><th>โปรตีน</th><th>พลังงาน</th></tr></thead><tbody>
+        ${foods.map(([n,q,g,k])=>`<tr><td>${n}</td><td>${q}</td><td class="n">${g} g</td><td class="n" style="color:${k>=100?'var(--high)':k<=55?'var(--ok)':'inherit'}">${k} kcal</td></tr>`).join('')}
+        </tbody></table></div></div>
+      <div class="gsec"><h3>ตัวอย่าง 1 วัน (เป้าหมายมื้อละราว ${target} กรัม)</h3>
+        <div class="kpis">${menu.map(([m,it])=>`<div class="kpi"><span>${m}</span><b>${it.reduce((a,[,g])=>a+g,0)} g</b><span>${it.map(([n])=>n).join(' + ')}</span></div>`).join('')}</div>
+        <p>รวม <b>${tot} กรัม</b> ${gap>0?`ยังขาดอีกราว ${gap} กรัม เพิ่มเนื้อสัตว์อีก ${Math.ceil(gap/7)*2} ช้อนกินข้าว หรือไข่ ${Math.ceil(gap/7)} ฟองในวันนั้น`:'ถึงเป้าหมายขั้นต่ำของคุณแล้ว'}</p></div>
+      <div class="gsec"><h3>เคล็ดลับ</h3><ul>
+        <li>ร่างกายใช้โปรตีนสร้างกล้ามเนื้อได้ราว 20–40 กรัมต่อมื้อ กินมื้อเดียวเยอะๆ ไม่ได้ประโยชน์เพิ่ม${pg(13)}</li>
+        <li>โปรตีนจากพืช เช่น ถั่วเหลือง เต้าหู้ กินหลายชนิดร่วมกัน เช่น ข้าวกล้องกับถั่ว${pg(12)}</li>
+        <li>เวย์โปรตีนเป็นตัวช่วยเมื่อสะดวก ไม่จำเป็นต้องใช้${pg(12)}</li>
+        <li class="warnline">ผู้ป่วยโรคไตเรื้อรัง ต้องจำกัดโปรตีนตามแพทย์สั่ง (มักต่ำกว่า 0.8 กรัม/กก./วัน)${pg(13)}</li></ul></div>`;
+    }},
+
+  energy: {short:'ลดพลังงาน 300–500 kcal', title:'ลดพลังงานวันละ 300–500 kcal ทำได้จริงอย่างไร', src:['book','sugar','fat','meal','exch'],
+    render: C => {
+      const picks = [
+        ['นมเปรี้ยว 1 ขวด (300 มล.) เปลี่ยนเป็นน้ำเปล่า','น้ำตาล 16 ช้อนชา',320],
+        ['ไข่เจียว เปลี่ยนเป็นไข่ต้ม','น้ำมัน 5 ช้อนชา',225],
+        ['งดชานมไข่มุก 1 แก้ว (16 ออนซ์)','น้ำตาล 11 ช้อนชา',220],
+        ['งดโดนัท 1 ชิ้น','น้ำมัน 4.5 ช้อนชา (ยังไม่รวมแป้งและน้ำตาล)',200],
+        ['งดน้ำอัดลม 1 กระป๋อง (375 มล.)','น้ำตาล 9.5 ช้อนชา',190],
+        ['กาแฟสดเย็น 20 ออนซ์ สั่งหวาน 0%','น้ำตาล 9 ช้อนชา',180],
+        ['ไข่ดาว เปลี่ยนเป็นไข่ต้ม','น้ำมัน 4 ช้อนชา',180],
+        ['งดทอดมัน 1 ชิ้น','น้ำมัน 3 ช้อนชา',135],
+        ['หมูสามชั้น/ไก่ติดหนัง 4 ช้อนกินข้าว เปลี่ยนเป็นอกไก่หรือปลา','เนื้อสัตว์ไขมันสูง → ไขมันต่ำ',90],
+        ['ข้าวมันไก่ เปลี่ยนเป็นข้าวสวยกับไก่ต้ม','558–619 → 505–539 kcal',50]];
+      return `
+      <div class="you"><div>เป้าหมายของคุณ</div><div class="big">กินน้อยลงวันละ 300–500 kcal</div>
+        <div style="font-size:14.5px">${C.fatLoss?`จะช่วยลดไขมันได้ราว 0.3–0.45 kg ต่อสัปดาห์ ไขมันที่เครื่องแนะนำให้ลด ${fmt(-C.D.fc)} kg`:'ใช้เมื่อต้องการลดไขมัน'} ไม่ควรอดหนักกว่านี้ เพราะร่างกายจะลดการเผาผลาญและสลายกล้ามเนื้อ${pg(8)}</div></div>
+      <div class="gsec"><h3>เลือกสิ่งที่คุณทำได้ แล้วดูว่าลดได้กี่ kcal</h3>
+        <div class="picks" id="picks">${picks.map(([t,d,k],i)=>`<label for="pk${i}"><input type="checkbox" id="pk${i}" data-k="${k}"><span>${t}<br><span class="muted" style="font-size:13px">${d}</span></span><span class="k">−${k}</span></label>`).join('')}</div>
+        <div class="total" id="pick-total"><span>ลดได้รวม</span><span id="pick-sum">0 kcal</span></div>
+        <p class="muted" style="font-size:13px">คิดจากข้อมูลกรมอนามัย: น้ำตาล 1 ช้อนชา = 5 กรัม = 20 kcal, น้ำมัน 1 ช้อนชา = 45 kcal ตัวเลขเป็นค่าประมาณขั้นต่ำ</p></div>
+      <div class="gsec"><h3>อีกวิธีที่ช่วยได้</h3><ul>
+        <li>ใช้จาน 2:1:1 ทุกมื้อ ผักครึ่งจานทำให้อิ่มโดยพลังงานไม่สูง${pg(9)}</li>
+        <li>เลือกต้ม นึ่ง อบ ย่าง ยำ แทนทอดหรือผัด เลี่ยงหนัง เครื่องใน และส่วนที่ติดมัน</li>
+        <li>เพิ่มกิจกรรมทางกาย การเผาผลาญที่เพิ่มขึ้นช่วยให้ไม่ต้องลดอาหารมาก${pg(20)}</li></ul></div>`;
+    },
+    after: () => {
+      const upd = () => {
+        const s = [...document.querySelectorAll('#picks input:checked')].reduce((a,i)=>a+ +i.dataset.k,0);
+        const msg = s===0?'':s<300?' (ยังไม่ถึง 300)':s<=500?' ✓ อยู่ในช่วงที่แนะนำ':' (เกิน 500 ระวังเสียกล้ามเนื้อ)';
+        $('pick-sum').textContent = `${s} kcal${msg}`;
+        $('pick-sum').style.color = s>=300&&s<=500?'var(--ok)':s>500?'var(--high)':'inherit';
+      };
+      $('picks').addEventListener('change', upd); upd();
+    }},
+
+  fat: {short:'น้ำมันและไขมัน', title:'น้ำมันและไขมัน: วันละไม่เกิน 6 ช้อนชา', src:['fat','meal','exch','book'],
+    render: C => `
+      <div class="you"><div>ทั้งวันไม่ควรเกิน</div><div class="big">6 ช้อนชา ${spoons(6)}</div><div style="font-size:14.5px">น้ำมัน 1 ช้อนชา (5 กรัม) ให้ 45 kcal รวม 6 ช้อนชา = 270 kcal</div></div>
+      <div class="gsec"><h3>อาหารเหล่านี้มีน้ำมันกี่ช้อนชา</h3>
+        ${hbars([{n:'หอยทอด 1 จาน',v:8},{n:'ไข่เจียว',v:5},{n:'โดนัท 1 ชิ้น',v:4.5},{n:'ไข่ดาว',v:4},{n:'ทอดมัน 1 ชิ้น',v:3},{n:'ปาท่องโก๋ 1 ตัวเล็ก',v:1},{n:'กะทิ 1 ช้อนกินข้าว',v:1},{n:'ถั่วลิสง 1 ช้อนกินข้าว',v:1}], 6, 'ช้อนชา')}
+        <p>ตัวอย่าง: ไข่เจียว 1 จาน ใช้โควตาน้ำมันไปเกือบทั้งวัน (5 จาก 6 ช้อนชา) เปลี่ยนเป็นไข่ต้มได้โปรตีนเท่าเดิม</p></div>
+      <div class="gsec"><h3>เลือกแบบนี้แทน</h3>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>แทนที่จะกิน</th><th>เลือกแทน</th></tr></thead><tbody>
+          <tr><td>ทอด ผัด</td><td>ต้ม นึ่ง อบ ย่าง ยำ</td></tr>
+          <tr><td>หมูสามชั้น ไก่ติดหนัง (100 kcal/2 ช้อน)</td><td>ปลา สันในไก่ อกไก่ (35–55 kcal/2 ช้อน)</td></tr>
+          <tr><td>แกงกะทิ</td><td>แกงส้ม แกงจืด ต้มยำน้ำใส</td></tr>
+          <tr><td>น้ำมันหมู น้ำมันปาล์ม เนย</td><td>น้ำมันถั่วเหลือง รำข้าว มะกอก ในปริมาณน้อย</td></tr>
+        </tbody></table></div>
+        <p>ไขมันดีลดการอักเสบ เช่น น้ำมันมะกอก อะโวคาโด ถั่ว ปลาทะเล แต่ยังนับรวมในโควตา 6 ช้อนชา${pg(9)}</p></div>`},
+
+  sugar: {short:'น้ำตาลและเครื่องดื่ม', title:'น้ำตาล: วันละไม่เกิน 6 ช้อนชา', src:['sugar','book'],
+    render: C => `
+      <div class="you"><div>ทั้งวันไม่ควรเกิน</div><div class="big">6 ช้อนชา ${spoons(6)}</div><div style="font-size:14.5px">= 24 กรัม (1 ช้อนชา = 5 กรัม น้ำตาล 1 กรัมให้ 4 kcal)</div></div>
+      <div class="gsec"><h3>เครื่องดื่ม 1 แก้วมีน้ำตาลกี่ช้อนชา</h3>
+        ${hbars([{n:'นมเปรี้ยว 1 ขวด (300 มล.)',v:16},{n:'ชาเขียว 1 ขวด (500 มล.)',v:14},{n:'ชานมไข่มุก (16 ออนซ์)',v:11},{n:'น้ำอัดลม 1 กระป๋อง',v:9.5},{n:'กาแฟสดเย็น (20 ออนซ์)',v:9},{n:'เครื่องดื่มชูกำลัง (150 มล.)',v:7},{n:'ฝอยทอง 1 แพ',v:3},{n:'กาแฟกระป๋อง',v:2}], 6, 'ช้อนชา')}
+        <p>เครื่องดื่มหวาน 1 แก้วเกินโควตาทั้งวันได้ทันที เช่น ชาเขียว 1 ขวดมีน้ำตาลเกินกว่า 2 เท่าของที่ควรได้ทั้งวัน</p></div>
+      <div class="gsec"><h3>ทำแบบนี้</h3><ul>
+        <li>เลือกน้ำเปล่าไว้ก่อน เลี่ยงน้ำอัดลมและน้ำผลไม้</li>
+        <li>สั่ง "หวานน้อย 25%" หรือ "ไม่หวาน 0%" ให้ติดปาก</li>
+        <li>อ่านฉลาก เลือกสินค้าที่น้ำตาลน้อยกว่า 10 กรัมต่อหน่วยบริโภค ถ้า "น้ำตาล" อยู่ลำดับที่ 1–2 ของส่วนประกอบ ควรเลี่ยง${pg(19)}</li></ul></div>`},
+
+  sodium: {short:'โซเดียม (ความเค็ม)', title:'โซเดียม: วันละไม่เกิน 2,000 มิลลิกรัม', src:['sodium','meal','book'],
+    render: C => `
+      <div class="you"><div>ทั้งวันไม่ควรเกิน</div><div class="big">2,000 มิลลิกรัม</div><div style="font-size:14.5px">เท่ากับเกลือ 1 ช้อนชา ทั้งจากเครื่องปรุงและโซเดียมที่แฝงในอาหาร</div></div>
+      <div class="gsec"><h3>เครื่องปรุงปริมาณเท่านี้ = โซเดียมทั้งวันแล้ว</h3>
+        <div class="tbl-wrap"><table class="tbl"><tbody>
+          <tr><td>เกลือ</td><td class="n">1 ช้อนชา</td><td>${spoons(1)}</td></tr>
+          <tr><td>น้ำปลา</td><td class="n">4 ช้อนชา</td><td>${spoons(4)}</td></tr>
+          <tr><td>ซีอิ๊วขาว / ซอสปรุงรส</td><td class="n">6 ช้อนชา</td><td>${spoons(6)}</td></tr>
+          <tr><td>ซอสหอยนางรม</td><td class="n">4 ช้อนโต๊ะ (12 ช้อนชา)</td><td>${spoons(12)}</td></tr>
+        </tbody></table></div>
+        <p>การปรุงแต่ละครั้งมักใส่เครื่องปรุงมากกว่า 1 ชนิด จึงเกินได้ง่าย ตัวอย่าง: ต้มพะโล้ 1 ถ้วย มีโซเดียมประมาณ 556 มิลลิกรัม หรือเกือบ 1 ใน 3 ของทั้งวัน</p></div>
+      <div class="gsec"><h3>อ่านฉลากเป็น</h3>
+        <p>ถ้าฉลากระบุโซเดียม 500 มิลลิกรัม (25%) กินหมดซองแล้ว วันนั้นจะเหลือโควตาอีกเพียง 1,500 มิลลิกรัม อย่าลืมดูว่าซองนั้นต้องแบ่งกินกี่ครั้ง${pg(19)}</p>
+        <p>ขนมปังและอาหารแช่แข็งไม่เค็มแต่อาจมีโซเดียมจากผงฟูและสารกันบูด${pg(19)}</p></div>
+      <div class="gsec"><h3>ทำแบบนี้</h3><ul>
+        <li>ลดการปรุงรสจัด เลี่ยงการจิ้มน้ำจิ้ม ซีอิ๊ว และน้ำปลาเพิ่ม</li>
+        <li>เลี่ยงอาหารโซเดียมสูง เช่น อาหารแปรรูป บะหมี่กึ่งสำเร็จรูป</li>
+        <li>เพิ่มผักและผลไม้ ออกกำลังกายสม่ำเสมอ</li></ul></div>`},
+
+  strength: {short:'ท่าเวทเทรนนิ่ง', title:'การฝึกแรงต้าน (เวทเทรนนิ่ง): ท่าทำที่บ้าน', src:['fitt','band','book'],
+    render: C => {
+      const low = C.c.lowest.id, area = /a$/.test(low)?'arm':/l$/.test(low)?'leg':'trunk';
+      const ordered = [...EXERCISES].sort((a,b)=>(b.area===area)-(a.area===area));
+      return `
+      <div class="you"><div>สำหรับคุณ</div><div class="big">2–3 วันต่อสัปดาห์</div>
+        <div style="font-size:14.5px">ส่วนที่กล้ามเนื้อน้อยที่สุดคือ<b>${C.c.lowest.th}</b> (${fmt(C.c.lowest.p)}%) ท่าที่ช่วยส่วนนี้เรียงไว้ก่อน${C.D.mc>0?` เครื่องแนะนำให้เพิ่มกล้ามเนื้อ ${fmt(C.D.mc)} kg`:''}</div></div>
+      <div class="gsec"><h3>หลักการ</h3><ul>
+        <li>ฝึกกล้ามเนื้อมัดใหญ่ ขา หลัง อก แขน อย่างน้อย 2–3 วันต่อสัปดาห์${pg(10,21)}</li>
+        <li>หนักระดับที่รู้สึกตึงกล้ามเนื้อ ไม่กลั้นหายใจขณะออกแรง และเพิ่มความท้าทายทีละน้อย (กรมอนามัย หลัก FITT)</li>
+        <li>อบอุ่นร่างกาย 5–10 นาทีก่อนเริ่ม และยืดเหยียดหลังฝึก เว้นกล้ามเนื้อกลุ่มเดิม 1 วันก่อนฝึกซ้ำ <span class="pg">(แนวทางทั่วไป)</span></li>
+        <li>กินโปรตีนให้พอ (${C.pLo}–${C.pHi} กรัม/วัน) ร่วมด้วย กล้ามเนื้อจึงจะเพิ่ม${pg(10)}</li></ul></div>
+      <div class="exs">${ordered.map(x=>exCard(x, x.area===area)).join('')}</div>
+      <p class="warnline">หยุดทันทีถ้าเจ็บหน้าอก หน้ามืด หรือหายใจไม่ทัน ผู้มีโรคหัวใจหรือความดันโลหิตสูงควรปรึกษาแพทย์ก่อนเริ่ม</p>`;
+    }},
+
+  cardio: {short:'แอโรบิก ออกเท่าไหร่', title:'แอโรบิก: ออกกำลังกายแค่ไหนถึงพอ', src:['fitt','book'],
+    render: C => {
+      const lowImpact = C.D.bmi>30;
+      const walk = fig({hd:[64,18],nk:[64,32],hp:[62,76],k:[74,100],f:[84,128],e:[54,52],h:[48,70],k2:[54,102],f2:[42,128],e2:[74,50],h2:[84,62]}, {hl:['leg'], props:FLOOR});
+      return `
+      <div class="you"><div>เป้าหมายต่อสัปดาห์</div><div class="big">150–300 นาที</div><div style="font-size:14.5px">เช่น เดินเร็ววันละ 30 นาที 5 วัน${C.belly?' สำหรับไขมันช่องท้องของคุณ ยิ่งใกล้ 300 นาทียิ่งดี':''}${pg(21)}</div></div>
+      <div class="ex" style="grid-template-columns:minmax(0,150px) minmax(0,1fr)"><div class="frames">${walk}</div>
+        <div style="display:grid;gap:6px"><h3>หนักแค่ไหน: ทดสอบด้วยการพูด</h3>
+          <p>ระดับปานกลาง = เหนื่อยแต่ยังพูดเป็นประโยคสั้นๆ ได้ ร้องเพลงไม่ไหว${pg(21)}</p>
+          <p class="muted" style="font-size:14px">ถ้าพูดได้สบายเหมือนปกติ = เบาไป ถ้าพูดไม่เป็นประโยค = หนักไป</p></div></div>
+      <div class="gsec"><h3>หลัก FITT ของกรมอนามัย</h3>
+        <div class="kpis">
+          <div class="kpi"><span>F ความถี่</span><b>3–5 ครั้ง</b><span>ต่อสัปดาห์ หรือวันเว้นวัน</span></div>
+          <div class="kpi"><span>I ความหนัก</span><b>พูดเป็นประโยคสั้นๆ ได้</b><span>เหนื่อยพอประมาณ</span></div>
+          <div class="kpi"><span>T เวลา</span><b>10–30+ นาที</b><span>ต่อเนื่องอย่างน้อยครั้งละ 10 นาที</span></div>
+          <div class="kpi"><span>T ชนิด</span><b>เดิน วิ่ง ปั่น ว่าย</b><span>เลือกที่ชอบและทำต่อเนื่องได้</span></div></div></div>
+      <div class="gsec"><h3>${lowImpact?'BMI ของคุณเกิน 30 เริ่มแบบนี้':'เลือกกิจกรรม'}</h3><ul>
+        ${lowImpact?`<li>เริ่มจากเดินเร็ว เดินชัน หรือปั่นจักรยาน ก่อนวิ่ง เพื่อลดแรงกระแทกต่อเข่าและข้อเท้า${pg(24)}</li>`:`<li>วิ่ง: เผาผลาญสูงในเวลาจำกัด แต่มีแรงกระแทกต่อเข่าและข้อเท้า${pg(24)}</li>`}
+        <li>ว่ายน้ำ ปั่นจักรยาน เต้นแอโรบิก: แรงกระแทกต่ำ${pg(21)}</li>
+        <li>สะสมจากชีวิตประจำวันได้ เช่น เดินขึ้นบันไดแทนลิฟต์ เดินไปทำงาน ทำงานบ้าน${pg(20)}</li>
+        <li>เริ่มครั้งละ 10 นาทีได้ แล้วค่อยเพิ่มเวลา</li></ul></div>`;
+    }},
+
+  balance: {short:'ทรงตัวและยืดเหยียด', title:'ฝึกการทรงตัวและความยืดหยุ่น', src:['book'],
+    render: C => {
+      const one = fig({hd:[62,18],nk:[62,32],hp:[62,76],k:[62,102],f:[62,130],e:[72,50],h:[80,64],k2:[80,86],f2:[74,110]}, {hl:['leg'], props:FLOOR});
+      return `
+      <div class="you"><div>ทำทุกวัน</div><div class="big">วันละ 2–3 นาที</div><div style="font-size:14.5px">ลดความเสี่ยงหกล้ม ช่วยให้ก้ม เอี้ยวตัว และใส่รองเท้าได้คล่อง${pg(22)}${C.bone?' สำคัญสำหรับคุณเพราะแร่ธาตุค่อนไปทางต่ำ':''}</div></div>
+      <div class="ex" style="grid-template-columns:minmax(0,150px) minmax(0,1fr)"><div class="frames">${one}</div>
+        <div style="display:grid;gap:6px"><h3>ยืนขาเดียวขณะแปรงฟัน</h3>
+          <div class="dose"><span>ข้างละ 30 วินาที</span><span>สลับ 2 รอบ</span></div>
+          <ol><li>ยืนใกล้อ่างล้างหน้า มือหนึ่งพร้อมจับขอบได้</li><li>ยกเข่าข้างหนึ่งขึ้น ยืนขาเดียวขณะแปรงฟัน</li><li>สลับข้าง ถ้าง่ายแล้วลองหลับตาหรือไม่จับอะไร</li></ol>
+          <div class="pg" style="white-space:normal">ท่าจากคู่มือ น.22 · เวลาเป็นแนวทางทั่วไป</div></div></div>
+      <div class="gsec"><h3>ทางเลือกอื่น</h3><ul>
+        <li>รำไทเก๊ก หรือโยคะ ฝึกทรงตัว ความยืดหยุ่น และลดความเครียด${pg(22,25)}</li>
+        <li>ยืดเหยียดกล้ามเนื้อหลังออกกำลังกาย ค้างท่าละ 15–30 วินาที ไม่ฝืนจนเจ็บ${pg(22,25)}</li>
+        <li>พิลาทิส เหมาะกับคนปวดคอ บ่า ไหล่ จากการนั่งทำงาน${pg(25)}</li></ul></div>`;
+    }},
+
+  week: {short:'ตารางออกกำลังกาย 1 สัปดาห์', title:'ตารางออกกำลังกาย 1 สัปดาห์ของคุณ', src:['fitt','book'],
+    render: C => {
+      const sDays = (C.muscleLow || C.fatLoss || C.bone) ? [0,2,4] : [1,4];
+      const long = C.belly ? 45 : 35, short = 15;
+      const names = ['จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์','อาทิตย์'];
+      let total = 0;
+      const days = names.map((n,i)=>{
+        const items = [];
+        if(i===6){ items.push('<span class="tag re">พัก</span> ยืดเหยียด 10 นาที'); }
+        else if(sDays.includes(i)){ items.push('<span class="tag st">เวท</span> 4–6 ท่า 30 นาที'); items.push(`<span class="tag ca">แอโรบิก</span> เดินเร็ว ${short} นาที`); total+=short; }
+        else { items.push(`<span class="tag ca">แอโรบิก</span> ${C.D.bmi>30?'เดินเร็ว/ปั่นจักรยาน':'เดินเร็ว/วิ่งเหยาะ/ปั่น'} ${long} นาที`); total+=long; }
+        items.push('<span class="tag ba">ทรงตัว</span> 2 นาที');
+        return `<div class="day"><b>${n}</b>${items.map(t=>`<div>${t}</div>`).join('')}</div>`;
+      });
+      return `
+      <div class="you"><div>สรุปต่อสัปดาห์</div><div class="big">เวท ${sDays.length} วัน · แอโรบิก ${total} นาที</div>
+        <div style="font-size:14.5px">ตรงตามคำแนะนำ เวท 2–3 วัน และแอโรบิก 150–300 นาทีต่อสัปดาห์${pg(10,21)} ย้ายวันได้ แต่อย่าฝึกเวทกล้ามเนื้อกลุ่มเดิม 2 วันติดกัน</div></div>
+      <div class="week">${days.join('')}</div>
+      <div class="gsec"><h3>เริ่มอย่างไรไม่ให้บาดเจ็บ</h3>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>ช่วง</th><th>เวท</th><th>แอโรบิก</th></tr></thead><tbody>
+          <tr><td>สัปดาห์ 1–2</td><td>ท่าละ 1 เซต ฝึกท่าให้ถูก</td><td>ครั้งละ 10–20 นาที</td></tr>
+          <tr><td>สัปดาห์ 3–4</td><td>ท่าละ 2 เซต</td><td>ครั้งละ 20–30 นาที</td></tr>
+          <tr><td>สัปดาห์ 5 ขึ้นไป</td><td>2–3 เซต แล้วเพิ่มความยาก</td><td>ตามตารางด้านบน</td></tr></tbody></table></div>
+        <p class="muted" style="font-size:13.5px">เพิ่มทีละน้อยตามหลัก FITT ของกรมอนามัย ช่วงเวลาเป็นแนวทางทั่วไป</p></div>
+      <div class="more"><a class="gbtn" href="#guide-strength">ดูท่าเวทเทรนนิ่ง</a><a class="gbtn" href="#guide-cardio">ดูวิธีแอโรบิก</a><a class="gbtn" href="#guide-balance">ดูท่าทรงตัว</a></div>`;
+    }}
+};
+
+function openGuide(id){
+  const g = GUIDES[id]; if(!g || !CUR) return;
+  $('sheet-title').textContent = g.short;
+  const others = Object.keys(GUIDES).filter(k=>k!==id).map(k=>`<a class="gbtn" href="#guide-${k}">${GUIDES[k].short}</a>`).join('');
+  $('sheet-body').innerHTML = `<h2 id="guide-h" tabindex="-1">${g.title}</h2>${g.render(CUR)}
+    ${srcHTML(g.src)}<div class="gsec"><h3 style="font-size:16px">คู่มืออื่น</h3><div class="more">${others}</div></div>`;
+  const sh = $('sheet'); sh.hidden = false; sh.scrollTop = 0;
+  document.documentElement.style.overflow = 'hidden';
+  g.after?.();
+  $('guide-h').focus({preventScroll:true});
+}
+function closeGuide(){
+  if($('sheet').hidden) return;
+  $('sheet').hidden = true; document.documentElement.style.overflow = '';
+}
+window.addEventListener('hashchange', ()=>{
+  if(location.hash.startsWith('#guide-')) openGuide(location.hash.slice(7)); else closeGuide();
+});
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && !$('sheet').hidden) location.hash = 'advice'; });
 
 /* ---------- fat-loss pace calculator ---------- */
 let pace = 0.4, calcCtx = null;
